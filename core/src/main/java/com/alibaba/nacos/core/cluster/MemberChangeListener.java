@@ -20,6 +20,7 @@ import com.alibaba.nacos.common.notify.Event;
 import com.alibaba.nacos.common.notify.listener.Subscriber;
 
 /**
+ * 节点改变监听器
  * Node change listeners.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>

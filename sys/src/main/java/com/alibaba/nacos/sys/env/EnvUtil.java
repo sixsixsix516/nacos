@@ -220,6 +220,7 @@ public class EnvUtil {
     }
     
     /**
+     * 是否单机模式
      * Standalone mode or not.
      */
     public static boolean getStandaloneMode() {

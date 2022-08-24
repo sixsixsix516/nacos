@@ -20,6 +20,7 @@ import com.alibaba.nacos.common.lifecycle.Closeable;
 import com.alibaba.nacos.common.notify.listener.Subscriber;
 
 /**
+ * 事件发布器
  * Event publisher.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>

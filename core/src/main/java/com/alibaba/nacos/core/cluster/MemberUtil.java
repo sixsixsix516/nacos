@@ -161,12 +161,15 @@ public class MemberUtil {
         final NodeState old = member.getState();
         member.setState(NodeState.SUSPICIOUS);
         member.setFailAccessCnt(member.getFailAccessCnt() + 1);
+
         int maxFailAccessCnt = EnvUtil.getProperty(MEMBER_FAIL_ACCESS_CNT_PROPERTY, Integer.class, DEFAULT_MEMBER_FAIL_ACCESS_CNT);
         
         // If the number of consecutive failures to access the target node reaches
         // a maximum, or the link request is rejected, the state is directly down
+        // 超过失败阈值 或者 直接无法连接
         if (member.getFailAccessCnt() > maxFailAccessCnt || StringUtils
                 .containsIgnoreCase(ex.getMessage(), TARGET_MEMBER_CONNECT_REFUSE_ERRMSG)) {
+            // 节点下线
             member.setState(NodeState.DOWN);
         }
         if (!Objects.equals(old, member.getState())) {
@@ -235,6 +238,7 @@ public class MemberUtil {
     }
     
     /**
+     * 通过过滤器选择目标成员
      * Select target members with filter.
      *
      * @param members original members

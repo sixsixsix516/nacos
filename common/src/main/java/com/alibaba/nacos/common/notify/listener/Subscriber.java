@@ -21,6 +21,7 @@ import com.alibaba.nacos.common.notify.Event;
 import java.util.concurrent.Executor;
 
 /**
+ * 抽象 订阅者
  * An abstract subscriber class for subscriber interface.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
@@ -28,8 +29,9 @@ import java.util.concurrent.Executor;
  */
 @SuppressWarnings("PMD.AbstractClassShouldStartWithAbstractNamingRule")
 public abstract class Subscriber<T extends Event> {
-    
+
     /**
+     * 接收到事件 回调
      * Event callback.
      *
      * @param event {@link Event}
@@ -44,6 +46,7 @@ public abstract class Subscriber<T extends Event> {
     public abstract Class<? extends Event> subscribeType();
     
     /**
+     * 由监听器 决定 回调是异步还是同步的（默认同步的）
      * It is up to the listener to determine whether the callback is asynchronous or synchronous.
      *
      * @return {@link Executor}

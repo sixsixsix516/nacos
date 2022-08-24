@@ -78,11 +78,13 @@ public class InetUtils {
         
         List<String> interfaces = EnvUtil.getPropertyList(Constants.IGNORED_INTERFACES);
         IGNORED_INTERFACES.addAll(interfaces);
-        
+
+        // 启动立即刷新一次IP地址
         refreshIp();
         
         final long delayMs = Long.getLong(Constants.AUTO_REFRESH_TIME, 30_000L);
-        
+
+        // 定时刷新IP地址
         INET_AUTO_REFRESH_EXECUTOR.scheduleAtFixedRate(() -> {
             try {
                 InetUtils.refreshIp();
@@ -93,10 +95,11 @@ public class InetUtils {
     }
     
     /**
+     * 刷新IP地址
      * refresh ip address.
      */
     private static void refreshIp() {
-        
+        // 获取当前IP
         String tmpSelfIp = getNacosIp();
         
         if (StringUtils.isBlank(tmpSelfIp)) {
@@ -104,6 +107,7 @@ public class InetUtils {
         }
         
         if (StringUtils.isBlank(tmpSelfIp)) {
+            // 寻找第一块网卡
             tmpSelfIp = Objects.requireNonNull(findFirstNonLoopbackAddress()).getHostAddress();
         }
         
@@ -125,6 +129,7 @@ public class InetUtils {
     }
     
     /**
+     * 获取Nacos Ip地址 从环境变量
      * Get ip address from environment
      * System property nacos.server.ip
      * Spring property nacos.inetutils.ip-address.
@@ -137,7 +142,9 @@ public class InetUtils {
             nacosIp = EnvUtil.getProperty(IP_ADDRESS);
         }
         if (!StringUtils.isBlank(nacosIp)) {
+            // 如果获取到的就校验IP合法
             if (!(InternetAddressUtil.isIP(nacosIp) || InternetAddressUtil.isDomain(nacosIp))) {
+                // IP 校验失败
                 throw new RuntimeException("nacos address " + nacosIp + " is not ip");
             }
         }
@@ -263,6 +270,7 @@ public class InetUtils {
     }
     
     /**
+     * IP改变事件
      * {@link com.alibaba.nacos.core.cluster.ServerMemberManager} is listener.
      */
     @SuppressWarnings({"PMD.ClassNamingShouldBeCamelRule", "checkstyle:AbbreviationAsWordInName"})

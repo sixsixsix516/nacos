@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashSet;
 
 /**
+ * 成员改变事件
  * Publish this event when the node list changes，All interested in the node list change event can listen to this event.
  *
  * <ul>

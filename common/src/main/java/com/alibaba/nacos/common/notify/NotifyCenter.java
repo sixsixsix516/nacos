@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.alibaba.nacos.api.exception.NacosException.SERVER_ERROR;
 
 /**
+ * 统一事件通知中心
  * Unified Event Notify Center.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>

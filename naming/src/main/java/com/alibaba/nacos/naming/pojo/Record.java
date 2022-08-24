@@ -19,6 +19,8 @@ package com.alibaba.nacos.naming.pojo;
 import java.io.Serializable;
 
 /**
+ * 要在Nacos集群中传输和存储的记录
+ *
  * Record to transfer and store in Nacos cluster.
  *
  * @author nkorange
@@ -27,6 +29,7 @@ import java.io.Serializable;
 public interface Record extends Serializable {
     
     /**
+     * 获取这条记录的校验和，通常用户记录比较
      * get the checksum of this record, usually for record comparison.
      *
      * @return checksum of record

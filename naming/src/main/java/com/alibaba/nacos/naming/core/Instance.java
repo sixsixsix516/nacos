@@ -32,6 +32,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 正在服务的IP
+ *
  * IP under service.
  *
  * @author nkorange

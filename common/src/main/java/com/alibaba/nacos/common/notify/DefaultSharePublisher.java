@@ -26,6 +26,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * 慢事件的默认共享发布器
  * The default share event publisher implementation for slow event.
  *
  * @author zongtanghu

@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
+ * NacosServer的 能力
  * abilities of nacos server.
  *
  * @author liuzunfei

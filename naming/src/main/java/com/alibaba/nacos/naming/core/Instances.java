@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 实例列表的包
+ *
  * Package of instance list.
  *
  * @author nkorange
@@ -38,7 +40,10 @@ import java.util.Map;
 public class Instances implements Record {
     
     private static final long serialVersionUID = 5500823673993740145L;
-    
+
+    /**
+     * 实例列表
+     */
     private List<Instance> instanceList = new ArrayList<>();
     
     public List<Instance> getInstanceList() {

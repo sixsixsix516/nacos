@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 集群
  * Cluster.
  *
  * <p>The class will be serialized to json, and there are some variables and method can't use Camel naming rule for

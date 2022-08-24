@@ -27,26 +27,31 @@ package com.alibaba.nacos.core.cluster;
 public enum NodeState {
     
     /**
+     * 启动中
      * Node is starting.
      */
     STARTING,
     
     /**
+     * 启动，接收请求
      * Node is up and ready for request.
      */
     UP,
     
     /**
+     * 节点疑似崩溃
      * Node may Crash.
      */
     SUSPICIOUS,
     
     /**
+     * 节点下线
      * Node is out of service, something abnormal happened.
      */
     DOWN,
     
     /**
+     * 节点隔离
      * The Node is isolated.
      */
     ISOLATION,

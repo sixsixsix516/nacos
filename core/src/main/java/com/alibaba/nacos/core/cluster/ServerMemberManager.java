@@ -62,6 +62,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
+ * 集群节点管理器
  * Cluster node management in Nacos.
  *
  * <p>{@link ServerMemberManager#init()} Cluster node manager initialization {@link ServerMemberManager#shutdown()} The
@@ -100,6 +101,8 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     private static final long DEFAULT_TASK_DELAY_TIME = 5_000L;
     
     /**
+     * 集群中的全部节点(不包括自己)
+     * TODO 为什么使用 ConcurrentSkipListMap
      * Cluster node list.
      */
     private volatile ConcurrentSkipListMap<String, Member> serverList;
@@ -125,11 +128,13 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     private MemberLookup lookup;
     
     /**
+     * 当前节点
      * self member obj.
      */
     private volatile Member self;
     
     /**
+     * 存储这所有UP状态的节点
      * here is always the node information of the "UP" state.
      */
     private volatile Set<String> memberAddressInfos = new ConcurrentHashSet<>();
@@ -145,7 +150,10 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         
         init();
     }
-    
+
+    /**
+     * 初始化
+     */
     protected void init() throws NacosException {
         Loggers.CORE.info("Nacos-related cluster resource initialization");
         this.port = EnvUtil.getProperty(SERVER_PORT_PROPERTY, Integer.class, DEFAULT_SERVER_PORT);
@@ -155,7 +163,8 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         
         // init abilities.
         this.self.setAbilities(initMemberAbilities());
-        
+
+        // 集群全部节点列表 加入自己
         serverList.put(self.getAddress(), self);
         
         // register NodeChangeEvent publisher to NotifyManager
@@ -202,7 +211,8 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         NotifyCenter.registerToPublisher(MembersChangeEvent.class,
                 EnvUtil.getProperty(MEMBER_CHANGE_EVENT_QUEUE_SIZE_PROPERTY, Integer.class,
                         DEFAULT_MEMBER_CHANGE_EVENT_QUEUE_SIZE));
-        
+
+        // IP改变 重新设置集群内的节点IP属性
         // The address information of this node needs to be dynamically modified
         // when registering the IP change of this node
         NotifyCenter.registerSubscriber(new Subscriber<InetUtils.IPChangeEvent>() {
@@ -216,6 +226,8 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
                 self.setIp(event.getNewIP());
                 
                 String oldAddress = event.getOldIP() + ":" + port;
+
+                // 匿名内部类 调用外部类， 可读性好，知道这个serverList是外部类的对象
                 ServerMemberManager.this.serverList.remove(oldAddress);
                 ServerMemberManager.this.serverList.put(newAddress, self);
                 
@@ -235,6 +247,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     }
     
     /**
+     * 成员信息更新
      * member information update.
      *
      * @param newMember {@link Member}
@@ -316,6 +329,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     }
     
     /**
+     * 返回当前集群的全部节点
      * return this cluster all members.
      *
      * @return {@link Collection} all member
@@ -503,23 +517,31 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     
     // Synchronize the metadata information of a node
     // A health check of the target node is also attached
-    
+
+    /**
+     * 节点信息报告任务
+     * 猜测：随机选择一个节点上报自己？
+     */
     class MemberInfoReportTask extends Task {
         
         private final GenericType<RestResult<String>> reference = new GenericType<RestResult<String>>() {
         };
-        
+
+        // 光标
         private int cursor = 0;
         
         @Override
         protected void executeBody() {
+            // 获取全部节点(排除自己)
             List<Member> members = ServerMemberManager.this.allMembersWithoutSelf();
             
             if (members.isEmpty()) {
                 return;
             }
-            
+
+            // ? ? ? 猜测：随机选择一个
             this.cursor = (this.cursor + 1) % members.size();
+
             Member target = members.get(cursor);
             
             Loggers.CLUSTER.debug("report the metadata to the node : {}", target.getAddress());
@@ -542,6 +564,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
                                                     target, VersionUtils.version);
                                     Member memberNew = null;
                                     if (target.getExtendVal(MemberMetaDataConstants.VERSION) != null) {
+                                        // 协议升级
                                         memberNew = target.copy();
                                         // Clean up remote version info.
                                         // This value may still stay in extend info when remote server has been downgraded to old version.
@@ -569,6 +592,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
                                 if (result.ok()) {
                                     MemberUtil.onSuccess(ServerMemberManager.this, target);
                                 } else {
+                                    // 目标节点报告不上去，进入失败回调
                                     Loggers.CLUSTER.warn("failed to report new info to target node : {}, result : {}",
                                             target.getAddress(), result);
                                     MemberUtil.onFail(ServerMemberManager.this, target);

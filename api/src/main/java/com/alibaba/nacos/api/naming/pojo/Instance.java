@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 实例
  * Instance.
  *
  * @author nkorange

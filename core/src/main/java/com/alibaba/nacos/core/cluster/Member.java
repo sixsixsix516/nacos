@@ -33,6 +33,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 /**
+ * 集群成员节点
  * Cluster member node.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
@@ -44,7 +45,10 @@ public class Member implements Comparable<Member>, Cloneable, Serializable {
     private String ip;
     
     private int port = -1;
-    
+
+    /**
+     * 节点状态
+     */
     private volatile NodeState state = NodeState.UP;
     
     private Map<String, Object> extendInfo = Collections.synchronizedMap(new TreeMap<>());

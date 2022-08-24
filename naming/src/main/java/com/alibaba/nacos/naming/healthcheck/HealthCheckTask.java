@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.alibaba.nacos.common.utils.RandomUtils;
 
 /**
+ * 健康检查任务
  * Health check task.
  *
  * @author nacos

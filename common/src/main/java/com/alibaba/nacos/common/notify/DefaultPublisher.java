@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import static com.alibaba.nacos.common.notify.NotifyCenter.ringBufferSize;
 
 /**
+ * 默认发布器
  * The default event publisher implementation.
  *
  * <p>Internally, use {@link ArrayBlockingQueue <Event/>} as a message staging queue.
@@ -47,7 +48,10 @@ public class DefaultPublisher extends Thread implements EventPublisher {
     private volatile boolean shutdown = false;
     
     private Class<? extends Event> eventType;
-    
+
+    /**
+     * 存放 订阅者 TODO 内存中？集群中如何通讯
+     */
     protected final ConcurrentHashSet<Subscriber> subscribers = new ConcurrentHashSet<>();
     
     private int queueMaxSize = -1;
@@ -209,6 +213,7 @@ public class DefaultPublisher extends Thread implements EventPublisher {
             executor.execute(job);
         } else {
             try {
+                // 注意，不使用线程， 同步执行
                 job.run();
             } catch (Throwable e) {
                 LOGGER.error("Event callback exception: ", e);

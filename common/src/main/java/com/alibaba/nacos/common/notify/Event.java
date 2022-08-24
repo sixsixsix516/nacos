@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * 抽象事件
  * An abstract class for event.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>

@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 切换域
  * Switch domain.
  *
  * @author nacos
@@ -49,11 +50,17 @@ public class SwitchDomain implements Record, Cloneable {
     private long defaultCacheMillis = TimeUnit.SECONDS.toMillis(3);
     
     private float distroThreshold = 0.7F;
-    
+
+    /**
+     * 健康检查是否开启
+     */
     private boolean healthCheckEnabled = true;
     
     private boolean autoChangeHealthCheckEnabled = true;
-    
+
+    /**
+     * 是否开启distro
+     */
     private boolean distroEnabled = true;
     
     private boolean enableStandalone = true;
@@ -123,7 +130,10 @@ public class SwitchDomain implements Record, Cloneable {
     public void setHealthCheckWhiteList(Set<String> healthCheckWhiteList) {
         this.healthCheckWhiteList = healthCheckWhiteList;
     }
-    
+
+    /**
+     * 不做健康检查的白名单
+     */
     private Set<String> healthCheckWhiteList = new HashSet<>();
     
     public long getClientBeatInterval() {
@@ -222,7 +232,10 @@ public class SwitchDomain implements Record, Cloneable {
     public boolean isHealthCheckEnabled() {
         return healthCheckEnabled;
     }
-    
+
+    /**
+     * 是否开启健康检查
+     */
     public boolean isHealthCheckEnabled(String serviceName) {
         return healthCheckEnabled || getHealthCheckWhiteList().contains(serviceName);
     }
@@ -413,7 +426,10 @@ public class SwitchDomain implements Record, Cloneable {
     public String getChecksum() {
         return null;
     }
-    
+
+    /**
+     * 健康参数
+     */
     public interface HealthParams {
         
         /**
