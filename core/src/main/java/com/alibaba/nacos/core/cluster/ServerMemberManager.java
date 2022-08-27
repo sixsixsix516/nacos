@@ -152,7 +152,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     }
 
     /**
-     * 初始化
+     * 初始化.
      */
     protected void init() throws NacosException {
         Loggers.CORE.info("Nacos-related cluster resource initialization");
@@ -519,7 +519,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     // A health check of the target node is also attached
 
     /**
-     * 节点信息报告任务
+     * 节点信息报告任务.
      * 猜测：随机选择一个节点上报自己？
      */
     class MemberInfoReportTask extends Task {

@@ -50,7 +50,7 @@ public class DefaultPublisher extends Thread implements EventPublisher {
     private Class<? extends Event> eventType;
 
     /**
-     * 存放 订阅者 TODO 内存中？集群中如何通讯
+     * 存放 订阅者 TODO 内存中？集群中如何通讯 .
      */
     protected final ConcurrentHashSet<Subscriber> subscribers = new ConcurrentHashSet<>();
     

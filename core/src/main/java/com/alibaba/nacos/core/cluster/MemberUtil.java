@@ -70,6 +70,7 @@ public class MemberUtil {
     }
     
     /**
+     * 根据ip端口构建一个成员 Member
      * parse ip:port to member.
      *
      * @param member ip:port

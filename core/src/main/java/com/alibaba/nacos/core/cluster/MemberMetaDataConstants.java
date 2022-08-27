@@ -24,6 +24,7 @@ package com.alibaba.nacos.core.cluster;
 public class MemberMetaDataConstants {
     
     /**
+     * Raft 端口，整体使用 RPC 时去掉这个参数。
      * Raft port，This parameter is dropped when RPC is used as a whole.
      */
     public static final String RAFT_PORT = "raftPort";

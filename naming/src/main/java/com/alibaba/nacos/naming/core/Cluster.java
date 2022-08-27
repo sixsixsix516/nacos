@@ -59,19 +59,19 @@ public class Cluster extends com.alibaba.nacos.api.naming.pojo.Cluster implement
     private int defIpPort = -1;
 
     /**
-     * 健康检查任务
+     * 健康检查任务.
      */
     @JsonIgnore
     private HealthCheckTask checkTask;
 
     /**
-     * 持久化实例
+     * 持久化实例.
      */
     @JsonIgnore
     private Set<Instance> persistentInstances = new HashSet<>();
 
     /**
-     * 临时实例
+     * 临时实例.
      */
     @JsonIgnore
     private Set<Instance> ephemeralInstances = new HashSet<>();

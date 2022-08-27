@@ -47,7 +47,7 @@ public class Member implements Comparable<Member>, Cloneable, Serializable {
     private int port = -1;
 
     /**
-     * 节点状态
+     * 节点状态.
      */
     private volatile NodeState state = NodeState.UP;
     

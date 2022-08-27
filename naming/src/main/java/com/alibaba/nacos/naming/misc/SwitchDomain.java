@@ -52,14 +52,14 @@ public class SwitchDomain implements Record, Cloneable {
     private float distroThreshold = 0.7F;
 
     /**
-     * 健康检查是否开启
+     * 健康检查是否开启.
      */
     private boolean healthCheckEnabled = true;
     
     private boolean autoChangeHealthCheckEnabled = true;
 
     /**
-     * 是否开启distro
+     * 是否开启distro.
      */
     private boolean distroEnabled = true;
     
@@ -132,7 +132,7 @@ public class SwitchDomain implements Record, Cloneable {
     }
 
     /**
-     * 不做健康检查的白名单
+     * 不做健康检查的白名单.
      */
     private Set<String> healthCheckWhiteList = new HashSet<>();
     
@@ -234,7 +234,7 @@ public class SwitchDomain implements Record, Cloneable {
     }
 
     /**
-     * 是否开启健康检查
+     * 是否开启健康检查.
      */
     public boolean isHealthCheckEnabled(String serviceName) {
         return healthCheckEnabled || getHealthCheckWhiteList().contains(serviceName);
@@ -428,7 +428,7 @@ public class SwitchDomain implements Record, Cloneable {
     }
 
     /**
-     * 健康参数
+     * 健康参数.
      */
     public interface HealthParams {
         

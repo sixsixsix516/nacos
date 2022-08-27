@@ -72,7 +72,7 @@ public class AddressServerMemberLookup extends AbstractMemberLookup {
     private static final String DEFAULT_HEALTH_CHECK_FAIL_COUNT = "12";
     
     private static final String DEFAULT_SERVER_DOMAIN = "jmenv.tbsite.net";
-    
+
     private static final String DEFAULT_SERVER_POINT = "8080";
     
     private static final int DEFAULT_SERVER_RETRY_TIME = 5;
@@ -127,7 +127,7 @@ public class AddressServerMemberLookup extends AbstractMemberLookup {
         addressServerUrl = HTTP_PREFIX + domainName + ":" + addressPort + addressUrl;
         envIdUrl = HTTP_PREFIX + domainName + ":" + addressPort + "/env";
         
-        Loggers.CORE.info("ServerListService address-server port:" + addressPort);
+            Loggers.CORE.info("ServerListService address-server port:" + addressPort);
         Loggers.CORE.info("ADDRESS_SERVER_URL:" + addressServerUrl);
     }
     

@@ -36,6 +36,7 @@ import com.alibaba.nacos.sys.env.EnvUtil;
 import org.springframework.stereotype.Component;
 
 /**
+ * Distro 协议
  * Distro protocol.
  *
  * @author xiweng.yy
@@ -48,7 +49,10 @@ public class DistroProtocol {
     private final DistroComponentHolder distroComponentHolder;
     
     private final DistroTaskEngineHolder distroTaskEngineHolder;
-    
+
+    /**
+     * 是否已初始化.
+     */
     private volatile boolean isInitialized = false;
     
     public DistroProtocol(ServerMemberManager memberManager, DistroComponentHolder distroComponentHolder,
@@ -58,9 +62,13 @@ public class DistroProtocol {
         this.distroTaskEngineHolder = distroTaskEngineHolder;
         startDistroTask();
     }
-    
+
+    /**
+     * 开始Distro任务.
+     */
     private void startDistroTask() {
         if (EnvUtil.getStandaloneMode()) {
+            // 单机模式，直接初始化成功
             isInitialized = true;
             return;
         }

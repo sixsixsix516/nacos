@@ -78,8 +78,7 @@ public class DistroMapper extends MemberChangeListener {
                 // 开启健康检查
                 switchDomain.isHealthCheckEnabled(cluster.getServiceName())
                         //  集群 健康检查任务 未取消
-                        && !cluster.getHealthCheckTask().isCancelled()
-                        && responsible(cluster.getServiceName())
+                        && !cluster.getHealthCheckTask().isCancelled() && responsible(cluster.getServiceName())
                         // 集群包含实例
                         && cluster.contains(instance);
     }
@@ -96,8 +95,7 @@ public class DistroMapper extends MemberChangeListener {
         final List<String> servers = healthyList;
 
         if ( // 没有开启distro
-                !switchDomain.isDistroEnabled()
-                        || // 或者
+                !switchDomain.isDistroEnabled() || // 或者
                         // 单机模式（单机模式直接负责，因为那是一定给自己的请求，没有别人了）
                         EnvUtil.getStandaloneMode()) {
 
@@ -144,8 +142,7 @@ public class DistroMapper extends MemberChangeListener {
             int index = distroHash(responsibleTag) % servers.size();
             return servers.get(index);
         } catch (Throwable e) {
-            Loggers.SRV_LOG
-                    .warn("[NACOS-DISTRO] distro mapper failed, return localhost: " + EnvUtil.getLocalAddress(), e);
+            Loggers.SRV_LOG.warn("[NACOS-DISTRO] distro mapper failed, return localhost: " + EnvUtil.getLocalAddress(), e);
             return EnvUtil.getLocalAddress();
         }
     }
@@ -158,14 +155,11 @@ public class DistroMapper extends MemberChangeListener {
     public void onEvent(MembersChangeEvent event) {
         // Here, the node list must be sorted to ensure that all nacos-server's
         // node list is in the same order
-        List<String> list = MemberUtil.simpleMembers(
-                MemberUtil.selectTargetMembers(
-                        // 拿到的是全部成员（只改了状态，并不一定会删除下线的）
-                        event.getMembers(),
-                        // 只返回正常和疑似下线的节点
-                        member -> NodeState.UP.equals(member.getState()) || NodeState.SUSPICIOUS.equals(member.getState())
-                )
-        );
+        List<String> list = MemberUtil.simpleMembers(MemberUtil.selectTargetMembers(
+                // 拿到的是全部成员（只改了状态，并不一定会删除下线的）
+                event.getMembers(),
+                // 只返回正常和疑似下线的节点
+                member -> NodeState.UP.equals(member.getState()) || NodeState.SUSPICIOUS.equals(member.getState())));
         // 进行排序，因为所有集群节点顺序要一样
         Collections.sort(list);
         Collection<String> old = healthyList;

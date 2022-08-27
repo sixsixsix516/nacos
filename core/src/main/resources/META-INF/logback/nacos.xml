@@ -332,21 +332,21 @@
     
     <logger name="com.alibaba.nacos.core.listener.StartingApplicationListener">
         <appender-ref ref="CONSOLE"/>
-        <level value="INFO"/>
+        <level value="DEBUG"/>
     </logger>
     
     <logger name="com.alibaba.nacos.common.notify.NotifyCenter">
         <appender-ref ref="CONSOLE"/>
-        <level value="INFO"/>
+        <level value="DEBUG"/>
     </logger>
     
     <logger name="com.alibaba.nacos.sys.file.WatchFileCenter">
         <appender-ref ref="CONSOLE"/>
-        <level value="INFO"/>
+        <level value="DEBUG"/>
     </logger>
     
     <logger name="com.alibaba.nacos.common.executor.ThreadPoolManager">
         <appender-ref ref="CONSOLE"/>
-        <level value="INFO"/>
+        <level value="DEBUG"/>
     </logger>
 </configuration>
