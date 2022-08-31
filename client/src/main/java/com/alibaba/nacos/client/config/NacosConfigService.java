@@ -71,11 +71,18 @@ public class NacosConfigService implements ConfigService {
     private final ConfigFilterChainManager configFilterChainManager;
     
     public NacosConfigService(Properties properties) throws NacosException {
+        // 校验context-path是否正确
         ValidatorUtils.checkInitParam(properties);
-        
+
+        // 初始化命名空间 -> 将命名空间 放入properties对象中
         initNamespace(properties);
+
+        // 初始化 SPI 过滤器
         this.configFilterChainManager = new ConfigFilterChainManager(properties);
+
+        // 初始化 服务列表 管理器
         ServerListManager serverListManager = new ServerListManager(properties);
+        // 启动：同步服务列表
         serverListManager.start();
         
         this.worker = new ClientWorker(this.configFilterChainManager, serverListManager, properties);
@@ -85,6 +92,7 @@ public class NacosConfigService implements ConfigService {
     }
     
     private void initNamespace(Properties properties) {
+
         namespace = ParamUtil.parseNamespace(properties);
         properties.put(PropertyKeyConst.NAMESPACE, namespace);
     }
@@ -150,23 +158,38 @@ public class NacosConfigService implements ConfigService {
     public void removeListener(String dataId, String group, Listener listener) {
         worker.removeTenantListener(dataId, group, listener);
     }
-    
+
+    /**
+     * 命名空间 == 租户
+     */
     private String getConfigInner(String tenant, String dataId, String group, long timeoutMs) throws NacosException {
+
+        // 如果没传，就使用默认的组名 DEFAULT_GROUP
         group = blank2defaultGroup(group);
+
+        // 参数检查
         ParamUtils.checkKeyParam(dataId, group);
+
         ConfigResponse cr = new ConfigResponse();
-        
+
+        // 这些数据是准备给过滤器的，让他们知道当前的情况
         cr.setDataId(dataId);
         cr.setTenant(tenant);
         cr.setGroup(group);
-        
+
+        // 我们首先使用本地故障转移的内容 如果存在
         // We first try to use local failover content if exists.
+        // 用于故障转移的配置内容 不是由客户端程序自动创建的
         // A config content for failover is not created by client program automatically,
+        // 而是由用户维护
         // but is maintained by user.
+        // 这是为了某些场景设计的， 比如客户端紧急重启
         // This is designed for certain scenario like client emergency reboot,
+        // 在 nacos 服务器关闭时，同时需要更改配置
         // changing config needed in the same time, while nacos server is down.
         String content = LocalConfigInfoProcessor.getFailover(worker.getAgentName(), dataId, group, tenant);
         if (content != null) {
+            // 如果有数据
             LOGGER.warn("[{}] [get-config] get failover ok, dataId={}, group={}, tenant={}, config={}",
                     worker.getAgentName(), dataId, group, tenant, ContentUtils.truncateContent(content));
             cr.setContent(content);
@@ -179,6 +202,7 @@ public class NacosConfigService implements ConfigService {
         }
         
         try {
+            // 走http请求获取
             ConfigResponse response = worker.getServerConfig(dataId, group, tenant, timeoutMs, false);
             cr.setContent(response.getContent());
             cr.setEncryptedDataKey(response.getEncryptedDataKey());
@@ -194,6 +218,7 @@ public class NacosConfigService implements ConfigService {
                     worker.getAgentName(), dataId, group, tenant, ioe.toString());
         }
 
+        // 获取快照
         content = LocalConfigInfoProcessor.getSnapshot(worker.getAgentName(), dataId, group, tenant);
         if (content != null) {
             LOGGER.warn("[{}] [get-config] get snapshot ok, dataId={}, group={}, tenant={}, config={}",

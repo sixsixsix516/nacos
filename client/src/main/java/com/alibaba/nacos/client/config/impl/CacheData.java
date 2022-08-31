@@ -78,7 +78,10 @@ public class CacheData {
     public final String group;
     
     public final String tenant;
-    
+
+    /**
+     * TODO SUN 为何使用CopyOnWriteArrayList呢？
+     */
     private final CopyOnWriteArrayList<ManagerListenerWrap> listeners;
     
     private volatile String md5;

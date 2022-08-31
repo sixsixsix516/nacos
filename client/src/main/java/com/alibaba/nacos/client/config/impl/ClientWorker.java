@@ -88,6 +88,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.alibaba.nacos.api.common.Constants.ENCODE;
 
 /**
+ * 长轮询
  * Long polling.
  *
  * @author Nacos
@@ -407,10 +408,12 @@ public class ClientWorker implements Closeable {
     public ClientWorker(final ConfigFilterChainManager configFilterChainManager, ServerListManager serverListManager,
             final Properties properties) throws NacosException {
         this.configFilterChainManager = configFilterChainManager;
-        
+
+        // 初始化
         init(properties);
         
         agent = new ConfigRpcTransportClient(properties, serverListManager);
+
         int count = ThreadUtils.getSuitableThreadCount(THREAD_MULTIPLE);
         ScheduledExecutorService executorService = Executors
                 .newScheduledThreadPool(Math.max(count, MIN_THREAD_NUM), r -> {
@@ -1071,7 +1074,11 @@ public class ClientWorker implements Closeable {
             return response.isSuccess();
         }
     }
-    
+
+    /**
+     * AgentName的意义，既然http请求对吧，那么你是谁呢？ 凭什么让你请求成功
+     * 以上只是本人猜测，需要验证
+     */
     public String getAgentName() {
         return this.agent.getName();
     }

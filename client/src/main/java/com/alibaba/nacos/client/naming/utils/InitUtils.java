@@ -51,17 +51,19 @@ public class InitUtils {
      */
     public static String initNamespaceForNaming(Properties properties) {
         String tmpNamespace = null;
-        
+
+        // 是否使用云上 命名空间 解析， 默认为true
         String isUseCloudNamespaceParsing = properties.getProperty(PropertyKeyConst.IS_USE_CLOUD_NAMESPACE_PARSING,
                 System.getProperty(SystemPropertyKeyConst.IS_USE_CLOUD_NAMESPACE_PARSING,
                         String.valueOf(Constants.DEFAULT_USE_CLOUD_NAMESPACE_PARSING)));
         
         if (Boolean.parseBoolean(isUseCloudNamespaceParsing)) {
-            
+            // 从ans云上 获取租户
             tmpNamespace = TenantUtil.getUserTenantForAns();
             LogUtils.NAMING_LOGGER.info("initializer namespace from System Property : {}", tmpNamespace);
-            
+
             tmpNamespace = TemplateUtils.stringEmptyAndThenExecute(tmpNamespace, () -> {
+                // 没获取到tmpNamespace 执行这里  -> 获取 ALIBABA_ALIWARE_NAMESPACE
                 String namespace = System.getenv(PropertyKeyConst.SystemEnv.ALIBABA_ALIWARE_NAMESPACE);
                 LogUtils.NAMING_LOGGER.info("initializer namespace from System Environment :" + namespace);
                 return namespace;
@@ -69,15 +71,18 @@ public class InitUtils {
         }
         
         tmpNamespace = TemplateUtils.stringEmptyAndThenExecute(tmpNamespace, () -> {
+            // 到这里 如果 tmpNamespace 还是为空，尝试 获取 namespace
             String namespace = System.getProperty(PropertyKeyConst.NAMESPACE);
             LogUtils.NAMING_LOGGER.info("initializer namespace from System Property :" + namespace);
             return namespace;
         });
         
         if (StringUtils.isEmpty(tmpNamespace)) {
+            // 如果还是为空！ 则从properties中获取namespace
             tmpNamespace = properties.getProperty(PropertyKeyConst.NAMESPACE);
         }
-        
+
+        // 我滴个姥姥，如果到这里还是空了！ 那就给个默认的呀， 也就是public
         tmpNamespace = TemplateUtils.stringEmptyAndThenExecute(tmpNamespace, () -> UtilAndComs.DEFAULT_NAMESPACE_ID);
         return tmpNamespace;
     }

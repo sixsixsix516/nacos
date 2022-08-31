@@ -58,14 +58,17 @@ public class TenantUtil {
     }
     
     /**
+     * 适配 在云上获取租户
      * Adapt the way ANS gets tenant on the cloud.
      *
      * @return user tenant for ans
      */
     public static String getUserTenantForAns() {
+        // 获取租户id
         String tmp = USER_TENANT;
-        
+
         if (StringUtils.isBlank(USER_TENANT)) {
+            // 没有则从 启动参数寻找
             tmp = System.getProperty(SystemPropertyKeyConst.ANS_NAMESPACE);
         }
         return tmp;

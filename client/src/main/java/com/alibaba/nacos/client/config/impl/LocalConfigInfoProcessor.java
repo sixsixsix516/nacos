@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
+ * 本地灾难恢复 目录工具
  * Local Disaster Recovery Directory Tool.
  *
  * @author Nacos
@@ -68,12 +69,14 @@ public class LocalConfigInfoProcessor {
     }
     
     public static String getFailover(String serverName, String dataId, String group, String tenant) {
+        // 获取容灾文件
         File localPath = getFailoverFile(serverName, dataId, group, tenant);
         if (!localPath.exists() || !localPath.isFile()) {
             return null;
         }
         
         try {
+            // 读取文件内容
             return readFile(localPath);
         } catch (IOException ioe) {
             LOGGER.error("[" + serverName + "] get failover error, " + localPath, ioe);

@@ -176,7 +176,8 @@ public class ParamUtil {
      */
     public static String parseNamespace(Properties properties) {
         String namespaceTmp = null;
-        
+
+
         String isUseCloudNamespaceParsing = properties.getProperty(PropertyKeyConst.IS_USE_CLOUD_NAMESPACE_PARSING,
                 System.getProperty(SystemPropertyKeyConst.IS_USE_CLOUD_NAMESPACE_PARSING,
                         String.valueOf(Constants.DEFAULT_USE_CLOUD_NAMESPACE_PARSING)));

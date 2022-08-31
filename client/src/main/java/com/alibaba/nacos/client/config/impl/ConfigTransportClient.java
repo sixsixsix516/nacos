@@ -34,6 +34,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 配置 传输 客户端， 包含配置模块的 基本操作
  * config transport client,include basic operations of config module.
  *
  * @author liuzunfei
@@ -59,7 +60,10 @@ public abstract class ConfigTransportClient {
     private int maxRetry = 3;
     
     private final long securityInfoRefreshIntervalMills = TimeUnit.SECONDS.toMillis(5);
-    
+
+    /**
+     * 安全代理
+     */
     protected SecurityProxy securityProxy;
     
     public void shutdown() throws NacosException {
@@ -67,14 +71,16 @@ public abstract class ConfigTransportClient {
     }
     
     public ConfigTransportClient(Properties properties, ServerListManager serverListManager) {
-        
+        // 获取编码
         String encodeTmp = properties.getProperty(PropertyKeyConst.ENCODE);
         if (StringUtils.isBlank(encodeTmp)) {
+            // 每配置，就使用默认的 UTF8
             this.encode = Constants.ENCODE;
         } else {
             this.encode = encodeTmp.trim();
         }
-        
+
+        // 获取命名空间 设置为 租户
         this.tenant = properties.getProperty(PropertyKeyConst.NAMESPACE);
         this.serverListManager = serverListManager;
         this.properties = properties;

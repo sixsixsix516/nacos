@@ -39,6 +39,7 @@ public interface SystemPropertyKeyConst {
     String IS_USE_CLOUD_NAMESPACE_PARSING = "nacos.use.cloud.namespace.parsing";
     
     /**
+     * 在云环境中，如果流程级别需要一个 全局唯一的 命名空间， 通过-D参数指定
      * In the cloud environment, if the process level requires a globally uniform namespace, it can be specified with
      * the -D parameter.
      */

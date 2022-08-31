@@ -101,13 +101,16 @@ public final class ThreadUtils {
     }
     
     /**
+     * 通过核心数，计算适当的线程数
      * Through the number of cores, calculate the appropriate number of threads.
      *
      * @param threadMultiple multiple time of cores
      * @return thread count
      */
     public static int getSuitableThreadCount(int threadMultiple) {
+        // 获取系统核数
         final int coreCount = PropertyUtils.getProcessorsCount();
+        // 工作数量
         int workerCount = 1;
         while (workerCount < coreCount * threadMultiple) {
             workerCount <<= 1;
