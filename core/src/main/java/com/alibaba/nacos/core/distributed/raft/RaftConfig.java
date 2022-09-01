@@ -42,7 +42,10 @@ public class RaftConfig implements Config<RequestProcessor4CP> {
     private Map<String, String> data = Collections.synchronizedMap(new HashMap<>());
     
     private String selfAddress;
-    
+
+    /**
+     * Raft成员节点
+     */
     private Set<String> members = Collections.synchronizedSet(new HashSet<>());
     
     @Override

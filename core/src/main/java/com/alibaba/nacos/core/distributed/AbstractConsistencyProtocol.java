@@ -31,7 +31,6 @@ import java.util.Map;
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
-@SuppressWarnings("all")
 public abstract class AbstractConsistencyProtocol<T extends Config, L extends RequestProcessor>
         implements ConsistencyProtocol<T, L> {
     

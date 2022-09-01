@@ -158,6 +158,7 @@ public class ProtocolManager extends MemberChangeListener implements DisposableB
             ProtocolExecutor.apMemberChange(() -> apProtocol.memberChange(toAPMembersInfo(event.getMembers())));
         }
         if (Objects.nonNull(cpProtocol)) {
+            // CP的 raft端口
             ProtocolExecutor.cpMemberChange(() -> cpProtocol.memberChange(toCPMembersInfo(event.getMembers())));
         }
     }

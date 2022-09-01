@@ -89,7 +89,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
-@SuppressWarnings("all")
 public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, RequestProcessor4CP>
         implements CPProtocol<RaftConfig, RequestProcessor4CP> {
     
@@ -185,7 +184,10 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
     public CompletableFuture<Response> writeAsync(WriteRequest request) {
         return raftServer.commit(request.getGroup(), request, new CompletableFuture<>());
     }
-    
+
+    /**
+     * @param addresses [ip:port, ip:port, ...]
+     */
     @Override
     public void memberChange(Set<String> addresses) {
         for (int i = 0; i < 5; i++) {

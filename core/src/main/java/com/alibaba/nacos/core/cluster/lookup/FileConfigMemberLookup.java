@@ -41,6 +41,9 @@ public class FileConfigMemberLookup extends AbstractMemberLookup {
     private static final String DEFAULT_SEARCH_SEQ = "cluster.conf";
     
     private FileWatcher watcher = new FileWatcher() {
+        /**
+         * 当文件发生改变 就重新从硬盘读取数据
+         */
         @Override
         public void onChange(FileChangeEvent event) {
             readClusterConfFromDisk();

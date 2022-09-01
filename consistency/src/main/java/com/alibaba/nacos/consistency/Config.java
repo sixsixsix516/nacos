@@ -30,7 +30,7 @@ import java.util.Set;
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
-public interface Config<L extends RequestProcessor> extends Serializable {
+public interface Config<L extends RequestProcessor> extends Serializable, ConsistencyProtocol {
     
     /**
      * Set the cluster node information to initialize，like [ip:port, ip:port, ip:port].

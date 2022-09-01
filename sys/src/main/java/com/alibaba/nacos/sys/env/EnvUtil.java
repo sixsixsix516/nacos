@@ -338,7 +338,7 @@ public class EnvUtil {
      * @throws IOException IOException
      */
     public static List<String> analyzeClusterConf(Reader reader) throws IOException {
-        List<String> instanceList = new ArrayList<String>();
+        List<String> instanceList = new ArrayList<>();
         List<String> lines = IoUtils.readLines(reader);
         String comment = "#";
         for (String line : lines) {

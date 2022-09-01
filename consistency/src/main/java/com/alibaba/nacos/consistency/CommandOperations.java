@@ -22,6 +22,7 @@ import com.alibaba.nacos.common.model.RestResultUtils;
 import java.util.Map;
 
 /**
+ * 操作和 维护命令  接口
  * Operation and maintenance command interface.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
@@ -29,6 +30,7 @@ import java.util.Map;
 public interface CommandOperations {
     
     /**
+     * 操作和 维护接口操作入口
      * Operation and maintenance interface operation entry.
      *
      * @param commands commands

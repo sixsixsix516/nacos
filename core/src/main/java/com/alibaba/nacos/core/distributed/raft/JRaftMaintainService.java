@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
+ * JRaft 操作接口
  * JRaft operations interface.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
