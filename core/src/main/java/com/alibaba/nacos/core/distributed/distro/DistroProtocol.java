@@ -72,11 +72,17 @@ public class DistroProtocol {
             isInitialized = true;
             return;
         }
+        // 开始校验任务
         startVerifyTask();
+        // 开始加载任务（数据同步）
         startLoadTask();
     }
-    
+
+    /**
+     * 开始加载任务
+     */
     private void startLoadTask() {
+        // 任务执行回调：做一些状态的改变
         DistroCallback loadCallback = new DistroCallback() {
             @Override
             public void onSuccess() {
@@ -88,10 +94,14 @@ public class DistroProtocol {
                 isInitialized = false;
             }
         };
+        // 线程池中提交一个任务
         GlobalExecutor.submitLoadDataTask(
                 new DistroLoadDataTask(memberManager, distroComponentHolder, DistroConfig.getInstance(), loadCallback));
     }
-    
+
+    /**
+     * 开始校验任务
+     */
     private void startVerifyTask() {
         GlobalExecutor.schedulePartitionDataTimedSync(new DistroVerifyTimedTask(memberManager, distroComponentHolder,
                         distroTaskEngineHolder.getExecuteWorkersManager()),
@@ -120,23 +130,28 @@ public class DistroProtocol {
      * @param delay     delay time for sync
      */
     public void sync(DistroKey distroKey, DataOperation action, long delay) {
+        // 向除本节点外的所有节点进行数据同步
         for (Member each : memberManager.allMembersWithoutSelf()) {
             syncToTarget(distroKey, action, each.getAddress(), delay);
         }
     }
     
     /**
+     * 对目标节点进行数据同步
      * Start to sync to target server.
      *
      * @param distroKey    distro key of sync data
      * @param action       the action of data operation
      * @param targetServer target server
-     * @param delay        delay time for sync
+     * @param delay        delay time for sync 同步延迟时间
      */
     public void syncToTarget(DistroKey distroKey, DataOperation action, String targetServer, long delay) {
         DistroKey distroKeyWithTarget = new DistroKey(distroKey.getResourceKey(), distroKey.getResourceType(),
                 targetServer);
+
+        // 组建延迟任务
         DistroDelayTask distroDelayTask = new DistroDelayTask(distroKeyWithTarget, action, delay);
+        // 发布延迟任务
         distroTaskEngineHolder.getDelayTaskExecuteEngine().addTask(distroKeyWithTarget, distroDelayTask);
         if (Loggers.DISTRO.isDebugEnabled()) {
             Loggers.DISTRO.debug("[DISTRO-SCHEDULE] {} to {}", distroKey, targetServer);

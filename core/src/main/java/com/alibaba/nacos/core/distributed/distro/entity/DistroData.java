@@ -19,6 +19,7 @@ package com.alibaba.nacos.core.distributed.distro.entity;
 import com.alibaba.nacos.consistency.DataOperation;
 
 /**
+ * Distro 数据
  * Distro data.
  *
  * @author xiweng.yy

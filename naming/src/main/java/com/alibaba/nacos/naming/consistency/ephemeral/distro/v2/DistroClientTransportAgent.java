@@ -77,6 +77,7 @@ public class DistroClientTransportAgent implements DistroTransportAgent {
             return false;
         }
         try {
+            // 发送同步rpc请求
             Response response = clusterRpcClientProxy.sendRequest(member, request);
             return checkResponse(response);
         } catch (NacosException e) {
@@ -184,19 +185,25 @@ public class DistroClientTransportAgent implements DistroTransportAgent {
     
     @Override
     public DistroData getDatumSnapshot(String targetServer) {
+        // 获取目标节点
         Member member = memberManager.find(targetServer);
         if (checkTargetServerStatusUnhealthy(member)) {
+            // 如果节点不健康，就不能获取数据
             throw new DistroException(
                     String.format("[DISTRO] Cancel get snapshot caused by target server %s unhealthy", targetServer));
         }
+        // 请求对象
         DistroDataRequest request = new DistroDataRequest();
+        // 操作为 获取快照
         request.setDataOperation(DataOperation.SNAPSHOT);
         try {
+            // 发送请求、获取结果，使用rpc代理对象发送同步rpc请求
             Response response = clusterRpcClientProxy
                     .sendRequest(member, request, DistroConfig.getInstance().getLoadDataTimeoutMillis());
             if (checkResponse(response)) {
                 return ((DistroDataResponse) response).getDistroData();
             } else {
+                // 请求失败
                 throw new DistroException(
                         String.format("[DISTRO-FAILED] Get snapshot request to %s failed, code: %d, message: %s",
                                 targetServer, response.getErrorCode(), response.getMessage()));

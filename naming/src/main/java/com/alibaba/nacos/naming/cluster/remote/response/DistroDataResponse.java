@@ -20,6 +20,7 @@ import com.alibaba.nacos.api.remote.response.Response;
 import com.alibaba.nacos.core.distributed.distro.entity.DistroData;
 
 /**
+ * Distro 数据 响应对象
  * Distro data response.
  *
  * @author xiweng.yy

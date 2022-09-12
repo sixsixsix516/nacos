@@ -55,6 +55,7 @@ public class DistroDelayTaskProcessor implements NacosTaskProcessor {
                 return true;
             case CHANGE:
             case ADD:
+                // 创建一个同步 改变任务
                 DistroSyncChangeTask syncChangeTask = new DistroSyncChangeTask(distroKey, distroComponentHolder);
                 distroTaskEngineHolder.getExecuteWorkersManager().addTask(distroKey, syncChangeTask);
                 return true;

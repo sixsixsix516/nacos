@@ -87,12 +87,18 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
     @Override
     public List<Class<? extends Event>> subscribeTypes() {
         List<Class<? extends Event>> result = new LinkedList<>();
+        // 客户端改变事件
         result.add(ClientEvent.ClientChangedEvent.class);
+        // 客户端断开连接事件
         result.add(ClientEvent.ClientDisconnectEvent.class);
+        // 客户端校验失败事件
         result.add(ClientEvent.ClientVerifyFailedEvent.class);
         return result;
     }
-    
+
+    /**
+     * 事件回调
+     */
     @Override
     public void onEvent(Event event) {
         if (EnvUtil.getStandaloneMode()) {
@@ -104,6 +110,7 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
         if (event instanceof ClientEvent.ClientVerifyFailedEvent) {
             syncToVerifyFailedServer((ClientEvent.ClientVerifyFailedEvent) event);
         } else {
+            // 增量同步
             syncToAllServer((ClientEvent) event);
         }
     }
@@ -117,7 +124,10 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
         // Verify failed data should be sync directly.
         distroProtocol.syncToTarget(distroKey, DataOperation.ADD, event.getTargetServer(), 0L);
     }
-    
+
+    /**
+     * 增量同步
+     */
     private void syncToAllServer(ClientEvent event) {
         Client client = event.getClient();
         // Only ephemeral data sync by Distro, persist client should sync by raft.
@@ -128,6 +138,7 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
             DistroKey distroKey = new DistroKey(client.getClientId(), TYPE);
             distroProtocol.sync(distroKey, DataOperation.DELETE);
         } else if (event instanceof ClientEvent.ClientChangedEvent) {
+            // 节点变更事件、即增量同步
             DistroKey distroKey = new DistroKey(client.getClientId(), TYPE);
             distroProtocol.sync(distroKey, DataOperation.CHANGE);
         }
@@ -156,15 +167,19 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
                 return false;
         }
     }
-    
+
     private void handlerClientSyncData(ClientSyncData clientSyncData) {
+        // 接收到客户端同步数据
         Loggers.DISTRO.info("[Client-Add] Received distro client sync data {}", clientSyncData.getClientId());
+        // 因为是同步数据， 创建IpPortBasedClient, 并缓存
         clientManager.syncClientConnected(clientSyncData.getClientId(), clientSyncData.getAttributes());
         Client client = clientManager.getClient(clientSyncData.getClientId());
+        // 升级此客户端的服务信息
         upgradeClient(client, clientSyncData);
     }
     
     private void upgradeClient(Client client, ClientSyncData clientSyncData) {
+        // 已同步的服务集合
         Set<Service> syncedService = new HashSet<>();
         // process batch instance sync logic
         processBatchInstanceDistroData(syncedService, client, clientSyncData);
@@ -174,19 +189,28 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
         List<InstancePublishInfo> instances = clientSyncData.getInstancePublishInfos();
         
         for (int i = 0; i < namespaces.size(); i++) {
+            // 从获取的数据中构建一个Service
             Service service = Service.newService(namespaces.get(i), groupNames.get(i), serviceNames.get(i));
             Service singleton = ServiceManager.getInstance().getSingleton(service);
+            // 标记已被处理
             syncedService.add(singleton);
+            // 获取当前实例
             InstancePublishInfo instancePublishInfo = instances.get(i);
+            // 判断是否已经包含当前实例
             if (!instancePublishInfo.equals(client.getInstancePublishInfo(singleton))) {
+                // 不包含就添加
                 client.addServiceInstance(singleton, instancePublishInfo);
+                // 当前节点发布服务注册事件
                 NotifyCenter.publishEvent(
                         new ClientOperationEvent.ClientRegisterServiceEvent(singleton, client.getClientId()));
             }
         }
+
+        // 若当前client内部已发布的service不在本次同步的列表内，说明已经过时了，要删掉
         for (Service each : client.getAllPublishedService()) {
             if (!syncedService.contains(each)) {
                 client.removeServiceInstance(each);
+                // 发布客户端下线事件
                 NotifyCenter.publishEvent(
                         new ClientOperationEvent.ClientDeregisterServiceEvent(each, client.getClientId()));
             }
@@ -235,9 +259,12 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
     
     @Override
     public boolean processSnapshot(DistroData distroData) {
+        // 数据反序列化为 ClientSyncDatumSnapshot 对象
         ClientSyncDatumSnapshot snapshot = ApplicationUtils.getBean(Serializer.class)
                 .deserialize(distroData.getContent(), ClientSyncDatumSnapshot.class);
+        // 处理结果
         for (ClientSyncData each : snapshot.getClientSyncDataList()) {
+            // 处理客户端同步数据、远程节点负责的全部 client、service、instance信息
             handlerClientSyncData(each);
         }
         return true;

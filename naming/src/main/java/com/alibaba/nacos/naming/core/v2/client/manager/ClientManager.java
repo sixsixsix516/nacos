@@ -46,6 +46,7 @@ public interface ClientManager {
     boolean clientConnected(Client client);
     
     /**
+     * 新的同步客户端连接
      * New sync client connected.
      *
      * @param clientId   synced client id

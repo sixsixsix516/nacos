@@ -29,9 +29,15 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author xiweng.yy
  */
 public class DistroHttpCombinedKey extends DistroKey {
-    
+
+    /**
+     * 序号
+     */
     private static final AtomicLong SEQUENCE = new AtomicLong(0);
-    
+
+    /**
+     * 实际资源类型
+     */
     private final List<String> actualResourceTypes = new LinkedList<>();
     
     public DistroHttpCombinedKey(String resourceType, String targetServer) {

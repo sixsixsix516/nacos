@@ -30,12 +30,19 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DistroTaskEngineHolder {
-    
+
+    /**
+     * 延迟任务执行引擎
+     */
     private final DistroDelayTaskExecuteEngine delayTaskExecuteEngine = new DistroDelayTaskExecuteEngine();
-    
+
+    /**
+     * 任务执行引擎
+     */
     private final DistroExecuteTaskExecuteEngine executeWorkersManager = new DistroExecuteTaskExecuteEngine();
     
     public DistroTaskEngineHolder(DistroComponentHolder distroComponentHolder) {
+        // 延迟任务处理器
         DistroDelayTaskProcessor defaultDelayTaskProcessor = new DistroDelayTaskProcessor(this, distroComponentHolder);
         delayTaskExecuteEngine.setDefaultTaskProcessor(defaultDelayTaskProcessor);
     }

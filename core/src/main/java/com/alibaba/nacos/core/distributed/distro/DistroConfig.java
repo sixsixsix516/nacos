@@ -20,6 +20,7 @@ import com.alibaba.nacos.core.config.AbstractDynamicConfig;
 import com.alibaba.nacos.sys.env.EnvUtil;
 
 /**
+ * Distro 配置信息
  * Distro configuration.
  *
  * @author xiweng.yy

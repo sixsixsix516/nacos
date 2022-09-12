@@ -20,12 +20,16 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
+ * 客户端同步 数据快照
  * Client sync datum snapshot.
  *
  * @author xiweng.yy
  */
 public class ClientSyncDatumSnapshot {
-    
+
+    /**
+     * 客户端同步数据列表
+     */
     private List<ClientSyncData> clientSyncDataList = new LinkedList<>();
     
     public List<ClientSyncData> getClientSyncDataList() {

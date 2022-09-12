@@ -19,6 +19,7 @@ package com.alibaba.nacos.core.distributed.distro.entity;
 import java.util.Objects;
 
 /**
+ * 根据 Distro key 获取 Distro data
  * Distro key.
  *
  * @author xiweng.yy
@@ -28,7 +29,10 @@ public class DistroKey {
     private String resourceKey;
     
     private String resourceType;
-    
+
+    /**
+     * TODO 猜测：要从哪个节点查询？
+     */
     private String targetServer;
     
     public DistroKey() {
