@@ -54,7 +54,10 @@ public class ServiceInfo {
     private String clusters;
     
     private long cacheMillis = 1000L;
-    
+
+    /**
+     * 实例列表
+     */
     private List<Instance> hosts = new ArrayList<>();
     
     private long lastRefTime = 0L;

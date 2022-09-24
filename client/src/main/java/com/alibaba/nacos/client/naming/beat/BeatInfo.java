@@ -19,6 +19,7 @@ package com.alibaba.nacos.client.naming.beat;
 import java.util.Map;
 
 /**
+ * 心跳信息
  * Beat information.
  *
  * @author nkorange

@@ -36,6 +36,7 @@ import java.util.Map;
 public interface ClientOperationService {
     
     /**
+     * 注册一个实例
      * Register instance to service.
      *
      * @param service  service

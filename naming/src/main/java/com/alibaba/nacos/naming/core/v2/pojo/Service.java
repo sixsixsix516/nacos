@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * 服务
  * Service POJO for Nacos v2.
  *
  * @author xiweng.yy

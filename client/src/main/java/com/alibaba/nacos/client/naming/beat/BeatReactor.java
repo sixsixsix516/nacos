@@ -83,6 +83,7 @@ public class BeatReactor implements Closeable {
     }
     
     /**
+     * 添加一个心跳信息
      * Add beat information.
      *
      * @param serviceName service name
@@ -97,6 +98,7 @@ public class BeatReactor implements Closeable {
             existBeat.setStopped(true);
         }
         dom2Beat.put(key, beatInfo);
+        // 定时心跳检测
         executorService.schedule(new BeatTask(beatInfo), beatInfo.getPeriod(), TimeUnit.MILLISECONDS);
         MetricsMonitor.getDom2BeatSizeMonitor().set(dom2Beat.size());
     }

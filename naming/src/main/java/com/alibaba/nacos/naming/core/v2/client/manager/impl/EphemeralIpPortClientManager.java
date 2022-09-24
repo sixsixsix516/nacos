@@ -87,9 +87,12 @@ public class EphemeralIpPortClientManager implements ClientManager {
         Loggers.SRV_LOG.info("Client connection {} disconnect, remove instances and subscribers", clientId);
         IpPortBasedClient client = clients.remove(clientId);
         if (null == client) {
+            // 内存中没有，直接返回
             return true;
         }
+        // 发布断开连接事件
         NotifyCenter.publishEvent(new ClientEvent.ClientDisconnectEvent(client, isResponsibleClient(client)));
+        // 更改状态为取消
         client.release();
         return true;
     }
@@ -145,6 +148,7 @@ public class EphemeralIpPortClientManager implements ClientManager {
             for (String each : clientManager.allClientId()) {
                 IpPortBasedClient client = (IpPortBasedClient) clientManager.getClient(each);
                 if (null != client && isExpireClient(currentTime, client)) {
+                    // 实例过期了
                     clientManager.clientDisconnected(each);
                 }
             }

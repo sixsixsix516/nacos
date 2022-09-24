@@ -47,6 +47,7 @@ public interface Client {
     boolean isEphemeral();
     
     /**
+     * 更新 最后更新时间
      * Set the last time for updating current client as current time.
      */
     void setLastUpdatedTime();

@@ -17,6 +17,7 @@
 package com.alibaba.nacos.common.trace.event.naming;
 
 /**
+ * 注册实例事件
  * Naming register instance trace event.
  * @author yanda
  */

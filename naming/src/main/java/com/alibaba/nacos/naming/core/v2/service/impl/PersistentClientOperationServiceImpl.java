@@ -68,6 +68,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.zip.Checksum;
 
 /**
+ * 永久实例注册
  * Operation service for persistent clients and services. only for v2 For persistent instances, clientId must be in the
  * format of host:port.
  *

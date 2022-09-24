@@ -113,6 +113,7 @@ public class InstanceControllerV2 {
         if (ephemeral == null) {
             instance.setEphemeral((switchDomain.isDefaultInstanceEphemeral()));
         }
+        // 注册实例
         instanceServiceV2.registerInstance(namespaceId, serviceName, instance);
         NotifyCenter.publishEvent(new RegisterInstanceTraceEvent(System.currentTimeMillis(), "",
                 false, namespaceId, NamingUtils.getGroupName(serviceName), NamingUtils.getServiceName(serviceName),
@@ -437,8 +438,8 @@ public class InstanceControllerV2 {
         Loggers.SRV_LOG.debug("[CLIENT-BEAT] full arguments: beat: {}, serviceName: {}, namespaceId: {}", clientBeat,
                 serviceName, namespaceId);
         BeatInfoInstanceBuilder builder = BeatInfoInstanceBuilder.newBuilder();
-        int resultCode = instanceServiceV2
-                .handleBeat(namespaceId, serviceName, ip, port, clusterName, clientBeat, builder);
+        // 处理心跳
+        int resultCode = instanceServiceV2.handleBeat(namespaceId, serviceName, ip, port, clusterName, clientBeat, builder);
         result.put(CommonParams.CODE, resultCode);
         result.put(SwitchEntry.CLIENT_BEAT_INTERVAL,
                 instanceServiceV2.getHeartBeatInterval(namespaceId, serviceName, ip, port, clusterName));
