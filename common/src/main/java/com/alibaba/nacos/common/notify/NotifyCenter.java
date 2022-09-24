@@ -302,6 +302,9 @@ public class NotifyCenter {
         if (publisher != null) {
             return publisher.publish(event);
         }
+        if (event.isPluginEvent()) {
+            return true;
+        }
         LOGGER.warn("There are no [{}] publishers for this event, please register", topic);
         return false;
     }
