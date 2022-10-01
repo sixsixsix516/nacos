@@ -23,6 +23,7 @@ import com.alibaba.nacos.naming.pojo.Subscriber;
 import java.util.Collection;
 
 /**
+ * 代表一个客户端
  * Nacos naming client.
  *
  * <p>The abstract concept of the client stored by on the server of Nacos naming module. It is used to store which
@@ -33,6 +34,7 @@ import java.util.Collection;
 public interface Client {
     
     /**
+     * 从当前客户端获取一个唯一的id
      * Get the unique id of current client.
      *
      * @return id of client
@@ -40,6 +42,7 @@ public interface Client {
     String getClientId();
     
     /**
+     * 当前客户端是否是临时实例
      * Whether is ephemeral of current client.
      *
      * @return true if client is ephemeral, otherwise false
@@ -53,6 +56,7 @@ public interface Client {
     void setLastUpdatedTime();
     
     /**
+     * 获取最后更新时间
      * Get the last time for updating current client.
      *
      * @return last time for updating
@@ -60,6 +64,7 @@ public interface Client {
     long getLastUpdatedTime();
     
     /**
+     * 为当前客户端添加一个新的服务
      * Add a new instance for service for current client.
      *
      * @param service             publish service
@@ -69,6 +74,7 @@ public interface Client {
     boolean addServiceInstance(Service service, InstancePublishInfo instancePublishInfo);
     
     /**
+     * 从当前客户端移除一个服务
      * Remove service instance from client.
      *
      * @param service service of instance
@@ -77,6 +83,7 @@ public interface Client {
     InstancePublishInfo removeServiceInstance(Service service);
     
     /**
+     * 从当前客户端中获取一个服务的实例信息
      * Get instance info of service from client.
      *
      * @param service service of instance
@@ -85,6 +92,7 @@ public interface Client {
     InstancePublishInfo getInstancePublishInfo(Service service);
     
     /**
+     * 获取当前客户端的全部已发布服务
      * Get all published service of current client.
      *
      * @return published services
@@ -92,6 +100,7 @@ public interface Client {
     Collection<Service> getAllPublishedService();
     
     /**
+     * 为一个目标服务添加一个新的订阅者
      * Add a new subscriber for target service.
      *
      * @param service    subscribe service
@@ -101,6 +110,7 @@ public interface Client {
     boolean addServiceSubscriber(Service service, Subscriber subscriber);
     
     /**
+     * 将服务的订阅者移除
      * Remove subscriber for service.
      *
      * @param service service of subscriber
@@ -109,6 +119,7 @@ public interface Client {
     boolean removeServiceSubscriber(Service service);
     
     /**
+     * 从服务中获取全部订阅者
      * Get subscriber of service from client.
      *
      * @param service service of subscriber
@@ -117,6 +128,7 @@ public interface Client {
     Subscriber getSubscriber(Service service);
     
     /**
+     * 获取当前客户端的全部订阅者
      * Get all subscribe service of current client.
      *
      * @return subscribe services
@@ -124,6 +136,7 @@ public interface Client {
     Collection<Service> getAllSubscribeService();
     
     /**
+     * 生产同步数据
      * Generate sync data.
      *
      * @return sync data
@@ -131,6 +144,7 @@ public interface Client {
     ClientSyncData generateSyncData();
     
     /**
+     * 判断当前客户端是否过期
      * Whether current client is expired.
      *
      * @param currentTime unified current timestamp
@@ -139,6 +153,7 @@ public interface Client {
     boolean isExpire(long currentTime);
     
     /**
+     * 释放当前客户端和必要的资源
      * Release current client and release resources if neccessary.
      */
     void release();

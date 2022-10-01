@@ -20,6 +20,7 @@ import com.alibaba.nacos.naming.core.v2.client.Client;
 import com.alibaba.nacos.naming.core.v2.client.ClientAttributes;
 
 /**
+ * 客户端工厂
  * Client factory.
  *
  * @author xiweng.yy
@@ -27,6 +28,7 @@ import com.alibaba.nacos.naming.core.v2.client.ClientAttributes;
 public interface ClientFactory<C extends Client> {
     
     /**
+     * 获取当前工厂可以生产的客户端类型
      * Get the type of client this factory can build.
      *
      * @return client type
@@ -34,6 +36,7 @@ public interface ClientFactory<C extends Client> {
     String getType();
     
     /**
+     * 创建一个新的客户端
      * Build a new {@link Client}.
      *
      * @param clientId client id
@@ -43,6 +46,7 @@ public interface ClientFactory<C extends Client> {
     C newClient(String clientId, ClientAttributes attributes);
     
     /**
+     * 同步创建
      * Build a new {@link Client} synced from other server node.
      *
      * @param clientId   client id

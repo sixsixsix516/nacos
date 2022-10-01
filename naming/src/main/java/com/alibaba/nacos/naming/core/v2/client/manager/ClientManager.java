@@ -22,6 +22,7 @@ import com.alibaba.nacos.naming.core.v2.client.ClientAttributes;
 import java.util.Collection;
 
 /**
+ * 管理 naming 客户端
  * The manager of {@code Client} Nacos naming client.
  *
  * @author xiweng.yy
@@ -29,6 +30,7 @@ import java.util.Collection;
 public interface ClientManager {
     
     /**
+     * 新的客户端连接
      * New client connected.
      *
      * @param clientId new client id
@@ -38,6 +40,7 @@ public interface ClientManager {
     boolean clientConnected(String clientId, ClientAttributes attributes);
     
     /**
+     * 新的客户端连接
      * New client connected.
      *
      * @param client new client
@@ -56,6 +59,7 @@ public interface ClientManager {
     boolean syncClientConnected(String clientId, ClientAttributes attributes);
     
     /**
+     * 客户端断开连接
      * Client disconnected.
      *
      * @param clientId client id
@@ -64,6 +68,7 @@ public interface ClientManager {
     boolean clientDisconnected(String clientId);
     
     /**
+     * 根据id获取客户端
      * Get client by id.
      *
      * @param clientId client id
@@ -72,6 +77,7 @@ public interface ClientManager {
     Client getClient(String clientId);
     
     /**
+     * 指定客户端是否存在
      * Whether the client id exists.
      *
      * @param clientId client id
@@ -80,6 +86,7 @@ public interface ClientManager {
     boolean contains(final String clientId);
     
     /**
+     * 返回全部客户端id
      * All client id.
      *
      * @return collection of client id
@@ -87,6 +94,7 @@ public interface ClientManager {
     Collection<String> allClientId();
     
     /**
+     * 当前客户端是否响应请求
      * Whether the client is responsible by current server.
      *
      * @param client client
@@ -95,6 +103,7 @@ public interface ClientManager {
     boolean isResponsibleClient(Client client);
     
     /**
+     * 校验客户端
      * verify client.
      *
      * @param clientId client id

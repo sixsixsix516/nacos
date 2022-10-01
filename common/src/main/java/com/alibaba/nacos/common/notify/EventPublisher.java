@@ -58,6 +58,7 @@ public interface EventPublisher extends Closeable {
     void removeSubscriber(Subscriber subscriber);
     
     /**
+     * 发布一个事件
      * publish event.
      *
      * @param event {@link Event}
@@ -66,6 +67,7 @@ public interface EventPublisher extends Closeable {
     boolean publish(Event event);
     
     /**
+     * 通知消费者
      * Notify listener.
      *
      * @param subscriber {@link Subscriber}

@@ -29,6 +29,8 @@ import com.alibaba.nacos.naming.monitor.MetricsMonitor;
 import java.util.Collection;
 
 /**
+ * 基于ip和端口的客户端
+ * 临时实例和永久实例都用这个类
  * Nacos naming client based ip and port.
  *
  * <p>The client is bind to the ip and port users registered. It's a abstract content to simulate the tcp session
@@ -45,9 +47,15 @@ public class IpPortBasedClient extends AbstractClient {
     private final boolean ephemeral;
     
     private final String responsibleId;
-    
+
+    /**
+     * 客户端心跳健康检查任务
+     */
     private ClientBeatCheckTaskV2 beatCheckTask;
-    
+
+    /**
+     * 健康检查任务
+     */
     private HealthCheckTaskV2 healthCheckTaskV2;
     
     public IpPortBasedClient(String clientId, boolean ephemeral) {
@@ -123,13 +131,16 @@ public class IpPortBasedClient extends AbstractClient {
     }
     
     /**
+     * 客户端初始化，主要做健康检查的初始化
      * Init client.
      */
     public void init() {
         if (ephemeral) {
+            // 临时实例
             beatCheckTask = new ClientBeatCheckTaskV2(this);
             HealthCheckReactor.scheduleCheck(beatCheckTask);
         } else {
+            // 永久实例
             healthCheckTaskV2 = new HealthCheckTaskV2(this);
             HealthCheckReactor.scheduleCheck(healthCheckTaskV2);
         }

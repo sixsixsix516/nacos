@@ -26,12 +26,16 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
+ * 实例健康检查任务
  * Instance beat check task.
  *
  * @author xiweng.yy
  */
 public class InstanceBeatCheckTask implements Interceptable {
-    
+
+    /**
+     * 实例检查列表
+     */
     private static final List<InstanceBeatChecker> CHECKERS = new LinkedList<>();
     
     private final IpPortBasedClient client;
@@ -41,8 +45,10 @@ public class InstanceBeatCheckTask implements Interceptable {
     private final HealthCheckInstancePublishInfo instancePublishInfo;
     
     static {
+        // 添加需要检查的项目
         CHECKERS.add(new UnhealthyInstanceChecker());
         CHECKERS.add(new ExpiredInstanceChecker());
+        // spi扩展
         CHECKERS.addAll(NacosServiceLoader.load(InstanceBeatChecker.class));
     }
     
@@ -51,7 +57,10 @@ public class InstanceBeatCheckTask implements Interceptable {
         this.service = service;
         this.instancePublishInfo = instancePublishInfo;
     }
-    
+
+    /**
+     * 执行拦截
+     */
     @Override
     public void passIntercept() {
         for (InstanceBeatChecker each : CHECKERS) {

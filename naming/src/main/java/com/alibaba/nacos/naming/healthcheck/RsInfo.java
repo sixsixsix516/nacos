@@ -21,6 +21,7 @@ import com.alibaba.nacos.common.utils.JacksonUtils;
 import java.util.Map;
 
 /**
+ * 请求信息
  * Metrics info of server.
  *
  * @author nacos

@@ -87,11 +87,11 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
     
     private final DistroProtocol distroProtocol;
     
-    private volatile Notifier notifier = new Notifier();
+    private final Notifier notifier = new Notifier();
     
-    private Map<String, ConcurrentLinkedQueue<RecordListener>> listeners = new ConcurrentHashMap<>();
+    private final Map<String, ConcurrentLinkedQueue<RecordListener>> listeners = new ConcurrentHashMap<>();
     
-    private Map<String, String> syncChecksumTasks = new ConcurrentHashMap<>(16);
+    private final Map<String, String> syncChecksumTasks = new ConcurrentHashMap<>(16);
     
     public DistroConsistencyServiceImpl(DistroMapper distroMapper, DataStore dataStore, Serializer serializer,
             SwitchDomain switchDomain, GlobalConfig globalConfig, DistroProtocol distroProtocol) {
@@ -115,6 +115,7 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
         if (ApplicationUtils.getBean(UpgradeJudgement.class).isUseGrpcFeatures()) {
             return;
         }
+        // distro数据同步
         distroProtocol.sync(new DistroKey(key, KeyBuilder.INSTANCE_LIST_KEY_PREFIX), DataOperation.CHANGE,
                 DistroConfig.getInstance().getSyncDelayMillis());
     }

@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
+ * 永久实例客户端
  * The manager of {@code IpPortBasedClient} and persistence.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>

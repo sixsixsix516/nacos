@@ -41,13 +41,17 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 临时实例客户端
  * The manager of {@code IpPortBasedClient} and ephemeral.
  *
  * @author xiweng.yy
  */
 @Component("ephemeralIpPortClientManager")
 public class EphemeralIpPortClientManager implements ClientManager {
-    
+
+    /**
+     * 存储所有客户端   客户端id -> 客户端实例
+     */
     private final ConcurrentMap<String, IpPortBasedClient> clients = new ConcurrentHashMap<>();
     
     private final DistroMapper distroMapper;
@@ -130,7 +134,10 @@ public class EphemeralIpPortClientManager implements ClientManager {
         }
         return false;
     }
-    
+
+    /**
+     * 过期客户端清理器
+     */
     private static class ExpiredClientCleaner implements Runnable {
         
         private final EphemeralIpPortClientManager clientManager;

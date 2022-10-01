@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 基本连接客户端
  * The manager of {@code ConnectionBasedClient}.
  *
  * @author xiweng.yy

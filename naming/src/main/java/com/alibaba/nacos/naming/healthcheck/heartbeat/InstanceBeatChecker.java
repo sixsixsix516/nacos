@@ -21,6 +21,7 @@ import com.alibaba.nacos.naming.core.v2.pojo.HealthCheckInstancePublishInfo;
 import com.alibaba.nacos.naming.core.v2.pojo.Service;
 
 /**
+ * 实例心跳检查接口，有多个检查项目
  * Instance heart beat checker.
  *
  * @author xiweng.yy
