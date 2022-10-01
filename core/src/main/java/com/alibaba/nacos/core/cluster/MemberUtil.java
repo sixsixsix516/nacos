@@ -18,9 +18,9 @@ package com.alibaba.nacos.core.cluster;
 
 import com.alibaba.nacos.common.utils.ExceptionUtil;
 import com.alibaba.nacos.common.utils.InternetAddressUtil;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.core.utils.Loggers;
 import com.alibaba.nacos.sys.env.EnvUtil;
-import com.alibaba.nacos.common.utils.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -145,7 +144,31 @@ public class MemberUtil {
             manager.notifyMemberChange(member);
         }
     }
-    
+
+    /**
+     * Successful processing of the operation on the node and update metadata.
+     *
+     * @param member {@link Member}
+     * @since 2.1.2
+     */
+    public static void onSuccess(final ServerMemberManager manager, final Member member, final Member receivedMember) {
+        if (isMetadataChanged(member, receivedMember)) {
+            manager.getMemberAddressInfos().add(member.getAddress());
+            member.setState(NodeState.UP);
+            member.setFailAccessCnt(0);
+            member.setExtendInfo(receivedMember.getExtendInfo());
+            member.setAbilities(receivedMember.getAbilities());
+            manager.notifyMemberChange(member);
+        } else {
+            onSuccess(manager, member);
+        }
+    }
+
+    private static boolean isMetadataChanged(Member expected, Member actual) {
+        return !Objects.equals(expected.getAbilities(), actual.getAbilities()) || isBasicInfoChangedInExtendInfo(
+                expected, actual);
+    }
+
     public static void onFail(final ServerMemberManager manager, final Member member) {
         // To avoid null pointer judgments, pass in one NONE_EXCEPTION
         onFail(manager, member, ExceptionUtil.NONE_EXCEPTION);
@@ -163,8 +186,9 @@ public class MemberUtil {
         member.setState(NodeState.SUSPICIOUS);
         member.setFailAccessCnt(member.getFailAccessCnt() + 1);
 
-        int maxFailAccessCnt = EnvUtil.getProperty(MEMBER_FAIL_ACCESS_CNT_PROPERTY, Integer.class, DEFAULT_MEMBER_FAIL_ACCESS_CNT);
-        
+        int maxFailAccessCnt = EnvUtil
+                .getProperty(MEMBER_FAIL_ACCESS_CNT_PROPERTY, Integer.class, DEFAULT_MEMBER_FAIL_ACCESS_CNT);
+
         // If the number of consecutive failures to access the target node reaches
         // a maximum, or the link request is rejected, the state is directly down
         // 超过失败阈值 或者 直接无法连接
@@ -195,35 +219,7 @@ public class MemberUtil {
             Loggers.CLUSTER.error("cluster member node persistence failed : {}", ExceptionUtil.getAllExceptionMsg(ex));
         }
     }
-    
-    /**
-     * We randomly pick k nodes.
-     *
-     * @param members member list
-     * @param filter  filter {@link Predicate}
-     * @param k       node number
-     * @return target members
-     */
-    @SuppressWarnings("PMD.UndefineMagicConstantRule")
-    public static Collection<Member> kRandom(Collection<Member> members, Predicate<Member> filter, int k) {
-        
-        Set<Member> kMembers = new HashSet<>();
-        
-        // Here thinking similar consul gossip protocols random k node
-        int totalSize = members.size();
-        Member[] membersArray = members.toArray(new Member[totalSize]);
-        ThreadLocalRandom threadLocalRandom = ThreadLocalRandom.current();
-        for (int i = 0; i < 3 * totalSize && kMembers.size() < k; i++) {
-            int idx = threadLocalRandom.nextInt(totalSize);
-            Member member = membersArray[idx];
-            if (filter.test(member)) {
-                kMembers.add(member);
-            }
-        }
-        
-        return kMembers;
-    }
-    
+
     /**
      * Default configuration format resolution, only NACos-Server IP or IP :port or hostname: Port information.
      */
@@ -270,7 +266,7 @@ public class MemberUtil {
      */
     public static boolean isBasicInfoChanged(Member actual, Member expected) {
         if (null == expected) {
-            return null == actual;
+            return null != actual;
         }
         if (!expected.getIp().equals(actual.getIp())) {
             return true;
