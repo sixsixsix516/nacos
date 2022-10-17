@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 雪花id生成器
  * copy from http://www.cluozy.com/home/hexo/2018/08/11/shariding-JDBC-snowflake/.
  *
  * <strong>WorkerId</strong> generation policy: Calculate the InetAddress hashcode

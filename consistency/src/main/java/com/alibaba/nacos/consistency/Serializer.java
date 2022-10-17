@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 序列化
  * Serialization interface.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>

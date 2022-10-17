@@ -17,32 +17,45 @@
 package com.alibaba.nacos.consistency;
 
 /**
+ * 应用操作
  * Apply action.
  *
  * @author nkorange
  */
 public enum DataOperation {
+
     /**
+     * 添加数据
      * Data add.
      */
     ADD,
+
     /**
+     * 数据改变
      * Data changed.
      */
     CHANGE,
+
     /**
+     * 数据删除
      * Data deleted.
      */
     DELETE,
+
     /**
+     * 数据校验
      * Data verify.
      */
     VERIFY,
+
     /**
+     * 数据快照
      * Data Snapshot.
      */
     SNAPSHOT,
+
     /**
+     * 数据查询
      * Data query.
      */
     QUERY;

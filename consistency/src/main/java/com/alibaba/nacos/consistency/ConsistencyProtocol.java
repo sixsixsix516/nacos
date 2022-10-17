@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
+ * 一致性协议抽象接口
  * Has nothing to do with the specific implementation of the consistency protocol Initialization sequence： init(Config).
  *
  * <ul>
@@ -48,6 +49,7 @@ public interface ConsistencyProtocol<T extends Config, P extends RequestProcesso
     void init(T config);
     
     /**
+     * 添加一个请求处理器
      * Add a request handler.
      *
      * @param processors {@link RequestProcessor}
@@ -63,6 +65,7 @@ public interface ConsistencyProtocol<T extends Config, P extends RequestProcesso
     ProtocolMetaData protocolMetaData();
     
     /**
+     * 根据请求获取数据
      * Obtain data according to the request.
      *
      * @param request request
@@ -72,6 +75,7 @@ public interface ConsistencyProtocol<T extends Config, P extends RequestProcesso
     Response getData(ReadRequest request) throws Exception;
     
     /**
+     * 异步的获取数据
      * Get data asynchronously.
      *
      * @param request request

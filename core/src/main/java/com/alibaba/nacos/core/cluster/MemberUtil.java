@@ -110,7 +110,11 @@ public class MemberUtil {
         }
         return member.getAbilities().getRemoteAbility().isSupportRemoteConnection();
     }
-    
+
+    /**
+     * 计算raft端口
+     * 当前节点端口 - 1000
+     */
     public static int calculateRaftPort(Member member) {
         return member.getPort() - DEFAULT_RAFT_OFFSET_PORT;
     }

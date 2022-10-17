@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 序列化工厂
  * Serialization factory.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>

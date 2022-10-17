@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.Set;
 
 /**
+ * 一致性协议相关的配置对象
  * Consistent protocol related configuration objects.
  *
  * <p>{@link RequestProcessor} : The consistency protocol provides services for all businesses, but each business only cares
@@ -33,6 +34,7 @@ import java.util.Set;
 public interface Config<L extends RequestProcessor> extends Serializable, ConsistencyProtocol {
     
     /**
+     * 将成员设置进来
      * Set the cluster node information to initialize，like [ip:port, ip:port, ip:port].
      *
      * @param self    local node address information, ip:port
@@ -41,6 +43,7 @@ public interface Config<L extends RequestProcessor> extends Serializable, Consis
     void setMembers(String self, Set<String> members);
     
     /**
+     * 添加成员
      * members join.
      *
      * @param members {@link Set}
@@ -48,6 +51,7 @@ public interface Config<L extends RequestProcessor> extends Serializable, Consis
     void addMembers(Set<String> members);
     
     /**
+     * 删除成员
      * members leave.
      *
      * @param members {@link Set}
@@ -55,6 +59,7 @@ public interface Config<L extends RequestProcessor> extends Serializable, Consis
     void removeMembers(Set<String> members);
     
     /**
+     * 获得本地节点地址信息
      * get local node address info.
      *
      * @return address
@@ -62,6 +67,7 @@ public interface Config<L extends RequestProcessor> extends Serializable, Consis
     String getSelfMember();
     
     /**
+     * 获取集群的节点信息
      * get the cluster node information.
      *
      * @return members info, like [ip:port, ip:port, ip:port]
@@ -69,6 +75,7 @@ public interface Config<L extends RequestProcessor> extends Serializable, Consis
     Set<String> getMembers();
     
     /**
+     * 添加配置内容
      * Add configuration content.
      *
      * @param key   config key
@@ -77,6 +84,7 @@ public interface Config<L extends RequestProcessor> extends Serializable, Consis
     void setVal(String key, String value);
     
     /**
+     * 根据key获取配置内容
      * get configuration content by key.
      *
      * @param key config key
@@ -85,6 +93,7 @@ public interface Config<L extends RequestProcessor> extends Serializable, Consis
     String getVal(String key);
     
     /**
+     * 根据key获取配置内容，如果没找到就使用默认的值
      * get configuration content by key, if not found, use default-val.
      *
      * @param key        config key

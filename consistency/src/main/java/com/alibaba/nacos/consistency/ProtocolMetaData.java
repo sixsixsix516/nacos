@@ -27,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
+ * 一致性协议元数据信息
+ * <p>
  * Consistent protocol metadata information, &lt;Key, &lt;Key, Value &gt;&gt; structure Listeners that can register to
  * listen to changes in value.
  *

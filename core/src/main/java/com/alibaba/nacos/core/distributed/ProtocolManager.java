@@ -38,6 +38,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
+ * 一致性协议管理，负责管理Nacos种一致性协议的生命周期
  * Conformance protocol management, responsible for managing the lifecycle of conformance protocols in Nacos.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
@@ -62,43 +63,64 @@ public class ProtocolManager extends MemberChangeListener implements DisposableB
         this.memberManager = memberManager;
         NotifyCenter.registerSubscriber(this);
     }
-    
+
+    /**
+     * 将成员转换为 AP 协议
+     */
     public static Set<String> toAPMembersInfo(Collection<Member> members) {
         Set<String> nodes = new HashSet<>();
         members.forEach(member -> nodes.add(member.getAddress()));
         return nodes;
     }
-    
+
+    /**
+     * 将成员转换为 CP 协议
+     */
     public static Set<String> toCPMembersInfo(Collection<Member> members) {
         Set<String> nodes = new HashSet<>();
         members.forEach(member -> {
+            // 获取ip
             final String ip = member.getIp();
+            // 获取raft端口
             final int raftPort = MemberUtil.calculateRaftPort(member);
             nodes.add(ip + ":" + raftPort);
         });
         return nodes;
     }
-    
+
+    /**
+     * 获取 CP 协议
+     * @return
+     */
     public CPProtocol getCpProtocol() {
         synchronized (this) {
             if (!cpInit) {
+                // 没有初始化，就初始化一下
                 initCPProtocol();
                 cpInit = true;
             }
         }
         return cpProtocol;
     }
-    
+
+    /**
+     * 获取 AP 协议
+     * @return
+     */
     public APProtocol getApProtocol() {
         synchronized (this) {
             if (!apInit) {
+                // 没有初始化，就初始化一下
                 initAPProtocol();
                 apInit = true;
             }
         }
         return apProtocol;
     }
-    
+
+    /**
+     * 容器关闭
+     */
     @PreDestroy
     @Override
     public void destroy() {
@@ -109,17 +131,28 @@ public class ProtocolManager extends MemberChangeListener implements DisposableB
             cpProtocol.shutdown();
         }
     }
-    
+
+    /**
+     * 初始化 AP 协议
+     */
     private void initAPProtocol() {
         ApplicationUtils.getBeanIfExist(APProtocol.class, protocol -> {
+            // AP 协议存在，进来
+            // 配置类型
             Class configType = ClassUtils.resolveGenericType(protocol.getClass());
+            // 获取配置类
             Config config = (Config) ApplicationUtils.getBean(configType);
+            // 注册成员 for AP
             injectMembers4AP(config);
+            // 协议初始化
             protocol.init(config);
             ProtocolManager.this.apProtocol = protocol;
         });
     }
-    
+
+    /**
+     * 初始化 CP 协议
+     */
     private void initCPProtocol() {
         ApplicationUtils.getBeanIfExist(CPProtocol.class, protocol -> {
             Class configType = ClassUtils.resolveGenericType(protocol.getClass());

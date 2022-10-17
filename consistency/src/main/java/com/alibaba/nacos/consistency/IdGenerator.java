@@ -19,6 +19,7 @@ package com.alibaba.nacos.consistency;
 import java.util.Map;
 
 /**
+ * ID生成器
  * Id generator.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>

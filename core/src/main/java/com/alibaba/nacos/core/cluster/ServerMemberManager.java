@@ -65,19 +65,34 @@ import java.util.concurrent.ConcurrentSkipListMap;
 /**
  * 集群节点管理器
  * Cluster node management in Nacos.
- *
- * <p>{@link ServerMemberManager#init()} Cluster node manager initialization {@link ServerMemberManager#shutdown()} The
- * cluster node manager is down {@link ServerMemberManager#getSelf()} Gets local node information {@link
- * ServerMemberManager#getServerList()} Gets the cluster node dictionary {@link ServerMemberManager#getMemberAddressInfos()}
- * Gets the address information of the healthy member node {@link ServerMemberManager#allMembers()} Gets a list of
- * member information objects {@link ServerMemberManager#allMembersWithoutSelf()} Gets a list of cluster member nodes
- * with the exception of this node {@link ServerMemberManager#hasMember(String)} Is there a node {@link
- * ServerMemberManager#memberChange(Collection)} The final node list changes the method, making the full size more
- * {@link ServerMemberManager#memberJoin(Collection)} Node join, can automatically trigger {@link
- * ServerMemberManager#memberLeave(Collection)} When the node leaves, only the interface call can be manually triggered
- * {@link ServerMemberManager#update(Member)} Update the target node information {@link
- * ServerMemberManager#isUnHealth(String)} Whether the target node is healthy {@link
- * ServerMemberManager#initAndStartLookup()} Initializes the addressing mode
+ * <p>
+ * {@link ServerMemberManager#init()} Cluster node manager initialization
+ * <p>
+ * {@link ServerMemberManager#shutdown()} The cluster node manager is down
+ * <p>
+ * {@link ServerMemberManager#getSelf()} Gets local node information
+ * <p>
+ * {@link ServerMemberManager#getServerList()} Gets the cluster node dictionary
+ * <p>
+ * {@link ServerMemberManager#getMemberAddressInfos()} Gets the address information of the healthy member node
+ * <p>
+ * {@link ServerMemberManager#allMembers()} Gets a list of member information objects
+ * <p>
+ * {@link ServerMemberManager#allMembersWithoutSelf()} Gets a list of cluster member nodes with the exception of this node
+ * <p>
+ * {@link ServerMemberManager#hasMember(String)} Is there a node
+ * <p>
+ * {@link ServerMemberManager#memberChange(Collection)} The final node list changes the method, making the full size more
+ * <p>
+ * {@link ServerMemberManager#memberJoin(Collection)} Node join, can automatically trigger
+ * <p>
+ * {@link ServerMemberManager#memberLeave(Collection)} When the node leaves, only the interface call can be manually triggered
+ * <p>
+ * {@link ServerMemberManager#update(Member)} Update the target node information
+ * <p>
+ * {@link ServerMemberManager#isUnHealth(String)} Whether the target node is healthy
+ * <p>
+ * {@link ServerMemberManager#initAndStartLookup()} Initializes the addressing mode
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
@@ -157,20 +172,26 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
      */
     protected void init() throws NacosException {
         Loggers.CORE.info("Nacos-related cluster resource initialization");
+        // 获取当前节点端口
         this.port = EnvUtil.getProperty(SERVER_PORT_PROPERTY, Integer.class, DEFAULT_SERVER_PORT);
+        // 获取本机IP
         this.localAddress = InetUtils.getSelfIP() + ":" + port;
+        // 生成当前节点成员
         this.self = MemberUtil.singleParse(this.localAddress);
         this.self.setExtendVal(MemberMetaDataConstants.VERSION, VersionUtils.version);
-        
+
+        // 初始化能力
         // init abilities.
         this.self.setAbilities(initMemberAbilities());
 
         // 集群全部节点列表 加入自己
         serverList.put(self.getAddress(), self);
-        
+
+        // 注册集群事件
         // register NodeChangeEvent publisher to NotifyManager
         registerClusterEvent();
-        
+
+        // 初始化集群寻址模式
         // Initializes the lookup mode
         initAndStartLookup();
         
