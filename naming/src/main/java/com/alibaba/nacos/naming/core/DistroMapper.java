@@ -73,17 +73,6 @@ public class DistroMapper extends MemberChangeListener {
         this.healthyList = MemberUtil.simpleMembers(memberManager.allMembers());
     }
 
-
-    public boolean responsible(Cluster cluster, Instance instance) {
-        return
-                // 开启健康检查
-                switchDomain.isHealthCheckEnabled(cluster.getServiceName())
-                        //  集群 健康检查任务 未取消
-                        && !cluster.getHealthCheckTask().isCancelled() && responsible(cluster.getServiceName())
-                        // 集群包含实例
-                        && cluster.contains(instance);
-    }
-
     /**
      * 判断当前服务器是否负责
      * Judge whether current server is responsible for input tag.
