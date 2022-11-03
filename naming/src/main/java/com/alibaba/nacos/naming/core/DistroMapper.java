@@ -73,6 +73,7 @@ public class DistroMapper extends MemberChangeListener {
         this.healthyList = MemberUtil.simpleMembers(memberManager.allMembers());
     }
 
+
     public boolean responsible(Cluster cluster, Instance instance) {
         return
                 // 开启健康检查

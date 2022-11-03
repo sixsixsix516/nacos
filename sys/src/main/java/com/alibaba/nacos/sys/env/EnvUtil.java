@@ -17,7 +17,6 @@
 package com.alibaba.nacos.sys.env;
 
 import com.alibaba.nacos.common.JustForTest;
-import com.alibaba.nacos.common.utils.ConvertUtils;
 import com.alibaba.nacos.common.utils.IoUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.common.utils.ThreadUtils;
@@ -86,7 +85,7 @@ public class EnvUtil {
     
     private static final String CUSTOM_CONFIG_LOCATION_PROPERTY = "spring.config.additional-location";
     
-    private static final String DEFAULT_CONFIG_LOCATION  = "application.properties";
+    private static final String DEFAULT_CONFIG_LOCATION = "application.properties";
     
     private static final String DEFAULT_RESOURCE_PATH = "/application.properties";
     
@@ -207,18 +206,7 @@ public class EnvUtil {
     public static void setIsStandalone(Boolean isStandalone) {
         EnvUtil.isStandalone = isStandalone;
     }
-    
-    /**
-     * Whether open upgrade from 1.X nacos server. Might effect `doubleWrite` and `Old raft`.
-     *
-     * @since 2.1.0
-     * @return {@code true} open upgrade feature, otherwise {@code false}, default {@code false}
-     * @deprecated 2.2.0
-     */
-    public static boolean isSupportUpgradeFrom1X() {
-        return ConvertUtils.toBoolean(getProperty(Constants.SUPPORT_UPGRADE_FROM_1X), false);
-    }
-    
+
     /**
      * 是否单机模式
      * Standalone mode or not.
@@ -253,7 +241,8 @@ public class EnvUtil {
         if (StringUtils.isBlank(nacosHomePath)) {
             String nacosHome = System.getProperty(NACOS_HOME_KEY);
             if (StringUtils.isBlank(nacosHome)) {
-                nacosHome = Paths.get(System.getProperty(NACOS_HOME_PROPERTY), NACOS_HOME_ADDITIONAL_FILEPATH).toString();
+                nacosHome = Paths.get(System.getProperty(NACOS_HOME_PROPERTY), NACOS_HOME_ADDITIONAL_FILEPATH)
+                        .toString();
             }
             return nacosHome;
         }
@@ -288,7 +277,8 @@ public class EnvUtil {
     }
     
     public static float getMem() {
-        return (float) (1 - OperatingSystemBeanManager.getFreePhysicalMem() / OperatingSystemBeanManager.getTotalPhysicalMem());
+        return (float) (1 - OperatingSystemBeanManager.getFreePhysicalMem() / OperatingSystemBeanManager
+                .getTotalPhysicalMem());
     }
     
     public static String getConfPath() {
@@ -425,8 +415,8 @@ public class EnvUtil {
      * Get available processor numbers from environment.
      *
      * <p>
-     *     If there are setting of {@code nacos.core.sys.basic.processors} in config/JVM/system, use it.
-     *     If no setting, use the one time {@code ThreadUtils.getSuitableThreadCount()}.
+     * If there are setting of {@code nacos.core.sys.basic.processors} in config/JVM/system, use it. If no setting, use
+     * the one time {@code ThreadUtils.getSuitableThreadCount()}.
      * </p>
      *
      * @return available processor numbers from environment, will not lower than 1.
@@ -461,8 +451,9 @@ public class EnvUtil {
         if (scale < 0 || scale > 1) {
             throw new IllegalArgumentException("processors scale must between 0 and 1");
         }
-        double result = getProperty(Constants.AVAILABLE_PROCESSORS_BASIC, int.class,
-                ThreadUtils.getSuitableThreadCount(1)) * scale;
+        double result =
+                getProperty(Constants.AVAILABLE_PROCESSORS_BASIC, int.class, ThreadUtils.getSuitableThreadCount(1))
+                        * scale;
         return result > 1 ? (int) result : 1;
     }
 }

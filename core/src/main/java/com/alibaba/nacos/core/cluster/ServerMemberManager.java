@@ -47,7 +47,6 @@ import com.alibaba.nacos.sys.env.EnvUtil;
 import com.alibaba.nacos.sys.utils.InetUtils;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
@@ -63,36 +62,20 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- * 集群节点管理器
  * Cluster node management in Nacos.
- * <p>
- * {@link ServerMemberManager#init()} Cluster node manager initialization
- * <p>
- * {@link ServerMemberManager#shutdown()} The cluster node manager is down
- * <p>
- * {@link ServerMemberManager#getSelf()} Gets local node information
- * <p>
- * {@link ServerMemberManager#getServerList()} Gets the cluster node dictionary
- * <p>
- * {@link ServerMemberManager#getMemberAddressInfos()} Gets the address information of the healthy member node
- * <p>
- * {@link ServerMemberManager#allMembers()} Gets a list of member information objects
- * <p>
- * {@link ServerMemberManager#allMembersWithoutSelf()} Gets a list of cluster member nodes with the exception of this node
- * <p>
- * {@link ServerMemberManager#hasMember(String)} Is there a node
- * <p>
- * {@link ServerMemberManager#memberChange(Collection)} The final node list changes the method, making the full size more
- * <p>
- * {@link ServerMemberManager#memberJoin(Collection)} Node join, can automatically trigger
- * <p>
- * {@link ServerMemberManager#memberLeave(Collection)} When the node leaves, only the interface call can be manually triggered
- * <p>
- * {@link ServerMemberManager#update(Member)} Update the target node information
- * <p>
- * {@link ServerMemberManager#isUnHealth(String)} Whether the target node is healthy
- * <p>
- * {@link ServerMemberManager#initAndStartLookup()} Initializes the addressing mode
+ *
+ * <p>{@link ServerMemberManager#init()} Cluster node manager initialization {@link ServerMemberManager#shutdown()} The
+ * cluster node manager is down {@link ServerMemberManager#getSelf()} Gets local node information {@link
+ * ServerMemberManager#getServerList()} Gets the cluster node dictionary {@link ServerMemberManager#getMemberAddressInfos()}
+ * Gets the address information of the healthy member node {@link ServerMemberManager#allMembers()} Gets a list of
+ * member information objects {@link ServerMemberManager#allMembersWithoutSelf()} Gets a list of cluster member nodes
+ * with the exception of this node {@link ServerMemberManager#hasMember(String)} Is there a node {@link
+ * ServerMemberManager#memberChange(Collection)} The final node list changes the method, making the full size more
+ * {@link ServerMemberManager#memberJoin(Collection)} Node join, can automatically trigger {@link
+ * ServerMemberManager#memberLeave(Collection)} When the node leaves, only the interface call can be manually triggered
+ * {@link ServerMemberManager#update(Member)} Update the target node information {@link
+ * ServerMemberManager#isUnHealth(String)} Whether the target node is healthy {@link
+ * ServerMemberManager#initAndStartLookup()} Initializes the addressing mode
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
@@ -117,8 +100,6 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     private static final long DEFAULT_TASK_DELAY_TIME = 5_000L;
     
     /**
-     * 集群中的全部节点(不包括自己)
-     * TODO 为什么使用 ConcurrentSkipListMap
      * Cluster node list.
      */
     private volatile ConcurrentSkipListMap<String, Member> serverList;
@@ -144,13 +125,11 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     private MemberLookup lookup;
     
     /**
-     * 当前节点
      * self member obj.
      */
     private volatile Member self;
     
     /**
-     * 存储这所有UP状态的节点
      * here is always the node information of the "UP" state.
      */
     private volatile Set<String> memberAddressInfos = new ConcurrentHashSet<>();
@@ -163,35 +142,24 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     public ServerMemberManager(ServletContext servletContext) throws Exception {
         this.serverList = new ConcurrentSkipListMap<>();
         EnvUtil.setContextPath(servletContext.getContextPath());
-        
         init();
     }
-
-    /**
-     * 初始化.
-     */
+    
     protected void init() throws NacosException {
         Loggers.CORE.info("Nacos-related cluster resource initialization");
-        // 获取当前节点端口
         this.port = EnvUtil.getProperty(SERVER_PORT_PROPERTY, Integer.class, DEFAULT_SERVER_PORT);
-        // 获取本机IP
         this.localAddress = InetUtils.getSelfIP() + ":" + port;
-        // 生成当前节点成员
         this.self = MemberUtil.singleParse(this.localAddress);
         this.self.setExtendVal(MemberMetaDataConstants.VERSION, VersionUtils.version);
-
-        // 初始化能力
+        
         // init abilities.
         this.self.setAbilities(initMemberAbilities());
-
-        // 集群全部节点列表 加入自己
+        
         serverList.put(self.getAddress(), self);
-
-        // 注册集群事件
+        
         // register NodeChangeEvent publisher to NotifyManager
         registerClusterEvent();
-
-        // 初始化集群寻址模式
+        
         // Initializes the lookup mode
         initAndStartLookup();
         
@@ -209,14 +177,13 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         }
         return serverAbilities;
     }
-
+    
     private void registerClusterEvent() {
         // Register node change events
         NotifyCenter.registerToPublisher(MembersChangeEvent.class,
                 EnvUtil.getProperty(MEMBER_CHANGE_EVENT_QUEUE_SIZE_PROPERTY, Integer.class,
                         DEFAULT_MEMBER_CHANGE_EVENT_QUEUE_SIZE));
-
-        // IP改变 重新设置集群内的节点IP属性
+        
         // The address information of this node needs to be dynamically modified
         // when registering the IP change of this node
         NotifyCenter.registerSubscriber(new Subscriber<InetUtils.IPChangeEvent>() {
@@ -230,8 +197,6 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
                 self.setIp(event.getNewIP());
                 
                 String oldAddress = event.getOldIP() + ":" + port;
-
-                // 匿名内部类 调用外部类， 可读性好，知道这个serverList是外部类的对象
                 ServerMemberManager.this.serverList.remove(oldAddress);
                 ServerMemberManager.this.serverList.put(newAddress, self);
                 
@@ -251,7 +216,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         isUseAddressServer = this.lookup.useAddressServer();
         this.lookup.start();
     }
-
+    
     /**
      * switch look up.
      *
@@ -263,13 +228,12 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         isUseAddressServer = this.lookup.useAddressServer();
         this.lookup.start();
     }
-
+    
     public static boolean isUseAddressServer() {
         return isUseAddressServer;
     }
     
     /**
-     * 成员信息更新
      * member information update.
      *
      * @param newMember {@link Member}
@@ -352,7 +316,6 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     }
     
     /**
-     * 返回当前集群的全部节点
      * return this cluster all members.
      *
      * @return {@link Collection} all member
@@ -540,31 +503,23 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     
     // Synchronize the metadata information of a node
     // A health check of the target node is also attached
-
-    /**
-     * 节点信息报告任务.
-     * 猜测：随机选择一个节点上报自己？
-     */
+    
     class MemberInfoReportTask extends Task {
         
         private final GenericType<RestResult<String>> reference = new GenericType<RestResult<String>>() {
         };
-
-        // 光标
+        
         private int cursor = 0;
         
         @Override
         protected void executeBody() {
-            // 获取全部节点(排除自己)
             List<Member> members = ServerMemberManager.this.allMembersWithoutSelf();
             
             if (members.isEmpty()) {
                 return;
             }
-
-            // ? ? ? 猜测：随机选择一个
+            
             this.cursor = (this.cursor + 1) % members.size();
-
             Member target = members.get(cursor);
             
             Loggers.CLUSTER.debug("report the metadata to the node : {}", target.getAddress());
@@ -580,13 +535,9 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
                         .post(url, header, Query.EMPTY, getSelf(), reference.getType(), new Callback<String>() {
                             @Override
                             public void onReceive(RestResult<String> result) {
-                                if (isBelow13Version(result.getCode())) {
-                                    handleBelow13Version(target);
-                                }
                                 if (result.ok()) {
                                     handleReportResult(result.getData(), target);
                                 } else {
-                                    // 目标节点报告不上去，进入失败回调
                                     Loggers.CLUSTER.warn("failed to report new info to target node : {}, result : {}",
                                             target.getAddress(), result);
                                     MemberUtil.onFail(ServerMemberManager.this, target);
@@ -615,7 +566,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         protected void after() {
             GlobalExecutor.scheduleByCommon(this, 2_000L);
         }
-
+        
         private void handleReportResult(String reportResult, Member target) {
             if (isBooleanResult(reportResult)) {
                 MemberUtil.onSuccess(ServerMemberManager.this, target);
@@ -630,52 +581,9 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
                 MemberUtil.onSuccess(ServerMemberManager.this, target);
             }
         }
-
+        
         private boolean isBooleanResult(String reportResult) {
             return Boolean.TRUE.toString().equals(reportResult) || Boolean.FALSE.toString().equals(reportResult);
-        }
-
-        /**
-         * Judge target version whether below 1.3 version.
-         *
-         * @deprecated Remove after 2.2
-         */
-        @Deprecated
-        private boolean isBelow13Version(int code) {
-            return HttpStatus.NOT_IMPLEMENTED.value() == code || HttpStatus.NOT_FOUND.value() == code;
-        }
-
-        /**
-         * Handle the result when target is below 1.3 version.
-         *
-         * @deprecated Remove after 2.2
-         */
-        @Deprecated
-        private void handleBelow13Version(Member target) {
-            Loggers.CLUSTER.warn("{} version is too low, it is recommended to upgrade the version : {}", target,
-                    VersionUtils.version);
-            Member memberNew = null;
-            if (target.getExtendVal(MemberMetaDataConstants.VERSION) != null) {
-                memberNew = target.copy();
-                // Clean up remote version info.
-                // This value may still stay in extend info when remote server has been downgraded to old version.
-                memberNew.delExtendVal(MemberMetaDataConstants.VERSION);
-                memberNew.delExtendVal(MemberMetaDataConstants.READY_TO_UPGRADE);
-                Loggers.CLUSTER
-                        .warn("{} : Clean up version info," + " target has been downgrade to old version.", memberNew);
-            }
-            if (target.getAbilities() != null && target.getAbilities().getRemoteAbility() != null && target
-                    .getAbilities().getRemoteAbility().isSupportRemoteConnection()) {
-                if (memberNew == null) {
-                    memberNew = target.copy();
-                }
-                memberNew.getAbilities().getRemoteAbility().setSupportRemoteConnection(false);
-                Loggers.CLUSTER
-                        .warn("{} : Clear support remote connection flag,target may rollback version ", memberNew);
-            }
-            if (memberNew != null) {
-                update(memberNew);
-            }
         }
     }
     

@@ -39,7 +39,6 @@ import com.alibaba.nacos.naming.core.v2.pojo.BatchInstanceData;
 import com.alibaba.nacos.naming.core.v2.pojo.BatchInstancePublishInfo;
 import com.alibaba.nacos.naming.core.v2.pojo.InstancePublishInfo;
 import com.alibaba.nacos.naming.core.v2.pojo.Service;
-import com.alibaba.nacos.naming.core.v2.upgrade.UpgradeJudgement;
 import com.alibaba.nacos.naming.misc.Loggers;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import com.alibaba.nacos.sys.utils.ApplicationUtils;
@@ -63,15 +62,11 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
     
     private final DistroProtocol distroProtocol;
     
-    private final UpgradeJudgement upgradeJudgement;
-    
     private volatile boolean isFinishInitial;
     
-    public DistroClientDataProcessor(ClientManager clientManager, DistroProtocol distroProtocol,
-            UpgradeJudgement upgradeJudgement) {
+    public DistroClientDataProcessor(ClientManager clientManager, DistroProtocol distroProtocol) {
         this.clientManager = clientManager;
         this.distroProtocol = distroProtocol;
-        this.upgradeJudgement = upgradeJudgement;
         NotifyCenter.registerSubscriber(this, NamingEventPublisherFactory.getInstance());
     }
     
@@ -88,30 +83,20 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
     @Override
     public List<Class<? extends Event>> subscribeTypes() {
         List<Class<? extends Event>> result = new LinkedList<>();
-        // 客户端改变事件
         result.add(ClientEvent.ClientChangedEvent.class);
-        // 客户端断开连接事件
         result.add(ClientEvent.ClientDisconnectEvent.class);
-        // 客户端校验失败事件
         result.add(ClientEvent.ClientVerifyFailedEvent.class);
         return result;
     }
-
-    /**
-     * 事件回调
-     */
+    
     @Override
     public void onEvent(Event event) {
         if (EnvUtil.getStandaloneMode()) {
             return;
         }
-        if (!upgradeJudgement.isUseGrpcFeatures()) {
-            return;
-        }
         if (event instanceof ClientEvent.ClientVerifyFailedEvent) {
             syncToVerifyFailedServer((ClientEvent.ClientVerifyFailedEvent) event);
         } else {
-            // 增量同步
             syncToAllServer((ClientEvent) event);
         }
     }
@@ -125,10 +110,7 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
         // Verify failed data should be sync directly.
         distroProtocol.syncToTarget(distroKey, DataOperation.ADD, event.getTargetServer(), 0L);
     }
-
-    /**
-     * 增量同步
-     */
+    
     private void syncToAllServer(ClientEvent event) {
         Client client = event.getClient();
         // Only ephemeral data sync by Distro, persist client should sync by raft.
@@ -139,7 +121,6 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
             DistroKey distroKey = new DistroKey(client.getClientId(), TYPE);
             distroProtocol.sync(distroKey, DataOperation.DELETE);
         } else if (event instanceof ClientEvent.ClientChangedEvent) {
-            // 节点变更事件、即增量同步
             DistroKey distroKey = new DistroKey(client.getClientId(), TYPE);
             distroProtocol.sync(distroKey, DataOperation.CHANGE);
         }
@@ -170,19 +151,15 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
     }
     
     private void handlerClientSyncData(ClientSyncData clientSyncData) {
-        // 接收到客户端同步数据
-        Loggers.DISTRO.info("[Client-Add] Received distro client sync data {}, revision={}",
-                clientSyncData.getClientId(),
-                clientSyncData.getAttributes().getClientAttribute(ClientConstants.REVISION, 0L));
-        // 因为是同步数据， 创建IpPortBasedClient, 并缓存
+        Loggers.DISTRO
+                .info("[Client-Add] Received distro client sync data {}, revision={}", clientSyncData.getClientId(),
+                        clientSyncData.getAttributes().getClientAttribute(ClientConstants.REVISION, 0L));
         clientManager.syncClientConnected(clientSyncData.getClientId(), clientSyncData.getAttributes());
         Client client = clientManager.getClient(clientSyncData.getClientId());
-        // 升级此客户端的服务信息
         upgradeClient(client, clientSyncData);
     }
     
     private void upgradeClient(Client client, ClientSyncData clientSyncData) {
-        // 已同步的服务集合
         Set<Service> syncedService = new HashSet<>();
         // process batch instance sync logic
         processBatchInstanceDistroData(syncedService, client, clientSyncData);
@@ -192,51 +169,45 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
         List<InstancePublishInfo> instances = clientSyncData.getInstancePublishInfos();
         
         for (int i = 0; i < namespaces.size(); i++) {
-            // 从获取的数据中构建一个Service
             Service service = Service.newService(namespaces.get(i), groupNames.get(i), serviceNames.get(i));
             Service singleton = ServiceManager.getInstance().getSingleton(service);
-            // 标记已被处理
             syncedService.add(singleton);
-            // 获取当前实例
             InstancePublishInfo instancePublishInfo = instances.get(i);
-            // 判断是否已经包含当前实例
             if (!instancePublishInfo.equals(client.getInstancePublishInfo(singleton))) {
-                // 不包含就添加
                 client.addServiceInstance(singleton, instancePublishInfo);
-                // 当前节点发布服务注册事件
                 NotifyCenter.publishEvent(
                         new ClientOperationEvent.ClientRegisterServiceEvent(singleton, client.getClientId()));
             }
         }
-
-        // 若当前client内部已发布的service不在本次同步的列表内，说明已经过时了，要删掉
         for (Service each : client.getAllPublishedService()) {
             if (!syncedService.contains(each)) {
                 client.removeServiceInstance(each);
-                // 发布客户端下线事件
                 NotifyCenter.publishEvent(
                         new ClientOperationEvent.ClientDeregisterServiceEvent(each, client.getClientId()));
             }
         }
     }
     
-    private static void processBatchInstanceDistroData(Set<Service> syncedService, Client client, ClientSyncData clientSyncData)  {
+    private static void processBatchInstanceDistroData(Set<Service> syncedService, Client client,
+            ClientSyncData clientSyncData) {
         BatchInstanceData batchInstanceData = clientSyncData.getBatchInstanceData();
         if (batchInstanceData == null || CollectionUtils.isEmpty(batchInstanceData.getNamespaces())) {
-            Loggers.DISTRO.info("[processBatchInstanceDistroData] BatchInstanceData is null , clientId is :{}", client.getClientId());
+            Loggers.DISTRO.info("[processBatchInstanceDistroData] BatchInstanceData is null , clientId is :{}",
+                    client.getClientId());
             return;
         }
         List<String> namespaces = batchInstanceData.getNamespaces();
         List<String> groupNames = batchInstanceData.getGroupNames();
         List<String> serviceNames = batchInstanceData.getServiceNames();
         List<BatchInstancePublishInfo> batchInstancePublishInfos = batchInstanceData.getBatchInstancePublishInfos();
-    
+        
         for (int i = 0; i < namespaces.size(); i++) {
             Service service = Service.newService(namespaces.get(i), groupNames.get(i), serviceNames.get(i));
             Service singleton = ServiceManager.getInstance().getSingleton(service);
             syncedService.add(singleton);
             BatchInstancePublishInfo batchInstancePublishInfo = batchInstancePublishInfos.get(i);
-            BatchInstancePublishInfo targetInstanceInfo = (BatchInstancePublishInfo) client.getInstancePublishInfo(singleton);
+            BatchInstancePublishInfo targetInstanceInfo = (BatchInstancePublishInfo) client
+                    .getInstancePublishInfo(singleton);
             boolean result = false;
             if (targetInstanceInfo != null) {
                 result = batchInstancePublishInfo.equals(targetInstanceInfo);
@@ -247,18 +218,13 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
                         new ClientOperationEvent.ClientRegisterServiceEvent(singleton, client.getClientId()));
             }
         }
-        client.setRevision(
-                clientSyncData.getAttributes().<Integer>getClientAttribute(ClientConstants.REVISION, 0));
+        client.setRevision(clientSyncData.getAttributes().<Integer>getClientAttribute(ClientConstants.REVISION, 0));
     }
     
     @Override
     public boolean processVerifyData(DistroData distroData, String sourceAddress) {
         DistroClientVerifyInfo verifyData = ApplicationUtils.getBean(Serializer.class)
                 .deserialize(distroData.getContent(), DistroClientVerifyInfo.class);
-        // If not upgraded to 2.0.X, just renew client and return.
-        if (!upgradeJudgement.isUseGrpcFeatures()) {
-            verifyData.setRevision(0L);
-        }
         if (clientManager.verifyClient(verifyData)) {
             return true;
         }
@@ -268,12 +234,9 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
     
     @Override
     public boolean processSnapshot(DistroData distroData) {
-        // 数据反序列化为 ClientSyncDatumSnapshot 对象
         ClientSyncDatumSnapshot snapshot = ApplicationUtils.getBean(Serializer.class)
                 .deserialize(distroData.getContent(), ClientSyncDatumSnapshot.class);
-        // 处理结果
         for (ClientSyncData each : snapshot.getClientSyncDataList()) {
-            // 处理客户端同步数据、远程节点负责的全部 client、service、instance信息
             handlerClientSyncData(each);
         }
         return true;
@@ -307,15 +270,15 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
     
     @Override
     public List<DistroData> getVerifyData() {
-        List<DistroData> result = new LinkedList<>();
+        List<DistroData> result = null;
         for (String each : clientManager.allClientId()) {
             Client client = clientManager.getClient(each);
             if (null == client || !client.isEphemeral()) {
                 continue;
             }
             if (clientManager.isResponsibleClient(client)) {
-                // TODO add revision for client.
-                DistroClientVerifyInfo verifyData = new DistroClientVerifyInfo(client.getClientId(), 0);
+                DistroClientVerifyInfo verifyData = new DistroClientVerifyInfo(client.getClientId(),
+                        client.getRevision());
                 DistroKey distroKey = new DistroKey(client.getClientId(), TYPE);
                 DistroData data = new DistroData(distroKey,
                         ApplicationUtils.getBean(Serializer.class).serialize(verifyData));
