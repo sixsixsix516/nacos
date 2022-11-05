@@ -37,6 +37,7 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.remote.RemoteConstants;
 import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.api.remote.response.Response;
+import com.alibaba.nacos.client.env.NacosClientProperties;
 import com.alibaba.nacos.plugin.auth.api.RequestResource;
 import com.alibaba.nacos.client.config.common.GroupKey;
 import com.alibaba.nacos.client.config.filter.impl.ConfigFilterChainManager;
@@ -75,7 +76,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -411,7 +411,7 @@ public class ClientWorker implements Closeable {
     
     @SuppressWarnings("PMD.ThreadPoolCreationRule")
     public ClientWorker(final ConfigFilterChainManager configFilterChainManager, ServerListManager serverListManager,
-            final Properties properties) throws NacosException {
+            final NacosClientProperties properties) throws NacosException {
         this.configFilterChainManager = configFilterChainManager;
 
         // 初始化
@@ -432,9 +432,10 @@ public class ClientWorker implements Closeable {
         
     }
     
-    private void refreshContentAndCheck(String groupKey, boolean notify) {
+    private void refreshContentAndCheck(String groupKey) {
         CacheData cache = cacheMap.get().get(groupKey);
         if (cache != null) {
+            boolean notify = !cache.isInitializing();
             refreshContentAndCheck(cache, notify);
         }
     }
@@ -460,7 +461,7 @@ public class ClientWorker implements Closeable {
         }
     }
     
-    private void init(Properties properties) {
+    private void init(NacosClientProperties properties) {
         
         timeout = Math.max(ConvertUtils.toInt(properties.getProperty(PropertyKeyConst.CONFIG_LONG_POLL_TIMEOUT),
                 Constants.CONFIG_LONG_POLL_TIMEOUT), Constants.MIN_CONFIG_LONG_POLL_TIMEOUT);
@@ -543,7 +544,7 @@ public class ClientWorker implements Closeable {
          */
         private static final long ALL_SYNC_INTERNAL = 5 * 60 * 1000L;
         
-        public ConfigRpcTransportClient(Properties properties, ServerListManager serverListManager) {
+        public ConfigRpcTransportClient(NacosClientProperties properties, ServerListManager serverListManager) {
             super(properties, serverListManager);
         }
         
@@ -799,8 +800,7 @@ public class ClientWorker implements Closeable {
                                             .getKeyTenant(changeConfig.getDataId(), changeConfig.getGroup(),
                                                     changeConfig.getTenant());
                                     changeKeys.add(changeKey);
-                                    boolean isInitializing = cacheMap.get().get(changeKey).isInitializing();
-                                    refreshContentAndCheck(changeKey, !isInitializing);
+                                    refreshContentAndCheck(changeKey);
                                 }
                                 
                             }

@@ -22,6 +22,7 @@ import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.selector.ExpressionSelector;
 import com.alibaba.nacos.api.selector.NoneSelector;
 import com.alibaba.nacos.api.selector.SelectorType;
+import com.alibaba.nacos.client.env.NacosClientProperties;
 import com.alibaba.nacos.client.utils.ContextPathUtil;
 import com.alibaba.nacos.client.utils.LogUtils;
 import com.alibaba.nacos.client.utils.ParamUtil;
@@ -29,8 +30,6 @@ import com.alibaba.nacos.client.utils.TemplateUtils;
 import com.alibaba.nacos.client.utils.TenantUtil;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
-
-import java.util.Properties;
 
 /**
  * Init utils.
@@ -49,40 +48,35 @@ public class InitUtils {
      * @param properties properties
      * @return namespace
      */
-    public static String initNamespaceForNaming(Properties properties) {
+    public static String initNamespaceForNaming(NacosClientProperties properties) {
         String tmpNamespace = null;
-
-        // 是否使用云上 命名空间 解析， 默认为true
+        
         String isUseCloudNamespaceParsing = properties.getProperty(PropertyKeyConst.IS_USE_CLOUD_NAMESPACE_PARSING,
-                System.getProperty(SystemPropertyKeyConst.IS_USE_CLOUD_NAMESPACE_PARSING,
+                properties.getProperty(SystemPropertyKeyConst.IS_USE_CLOUD_NAMESPACE_PARSING,
                         String.valueOf(Constants.DEFAULT_USE_CLOUD_NAMESPACE_PARSING)));
         
         if (Boolean.parseBoolean(isUseCloudNamespaceParsing)) {
-            // 从ans云上 获取租户
+            
             tmpNamespace = TenantUtil.getUserTenantForAns();
             LogUtils.NAMING_LOGGER.info("initializer namespace from System Property : {}", tmpNamespace);
-
+            
             tmpNamespace = TemplateUtils.stringEmptyAndThenExecute(tmpNamespace, () -> {
-                // 没获取到tmpNamespace 执行这里  -> 获取 ALIBABA_ALIWARE_NAMESPACE
-                String namespace = System.getenv(PropertyKeyConst.SystemEnv.ALIBABA_ALIWARE_NAMESPACE);
+                String namespace = properties.getProperty(PropertyKeyConst.SystemEnv.ALIBABA_ALIWARE_NAMESPACE);
                 LogUtils.NAMING_LOGGER.info("initializer namespace from System Environment :" + namespace);
                 return namespace;
             });
         }
         
         tmpNamespace = TemplateUtils.stringEmptyAndThenExecute(tmpNamespace, () -> {
-            // 到这里 如果 tmpNamespace 还是为空，尝试 获取 namespace
-            String namespace = System.getProperty(PropertyKeyConst.NAMESPACE);
+            String namespace = properties.getProperty(PropertyKeyConst.NAMESPACE);
             LogUtils.NAMING_LOGGER.info("initializer namespace from System Property :" + namespace);
             return namespace;
         });
         
         if (StringUtils.isEmpty(tmpNamespace)) {
-            // 如果还是为空！ 则从properties中获取namespace
             tmpNamespace = properties.getProperty(PropertyKeyConst.NAMESPACE);
         }
-
-        // 我滴个姥姥，如果到这里还是空了！ 那就给个默认的呀， 也就是public
+        
         tmpNamespace = TemplateUtils.stringEmptyAndThenExecute(tmpNamespace, () -> UtilAndComs.DEFAULT_NAMESPACE_ID);
         return tmpNamespace;
     }
@@ -93,7 +87,7 @@ public class InitUtils {
      * @param properties properties
      * @since 1.4.1
      */
-    public static void initWebRootContext(Properties properties) {
+    public static void initWebRootContext(NacosClientProperties properties) {
         final String webContext = properties.getProperty(PropertyKeyConst.CONTEXT_PATH);
         TemplateUtils.stringNotEmptyAndThenExecute(webContext, () -> {
             UtilAndComs.webContext = ContextPathUtil.normalizeContextPath(webContext);
@@ -108,14 +102,14 @@ public class InitUtils {
      * @param properties properties
      * @return end point
      */
-    public static String initEndpoint(final Properties properties) {
+    public static String initEndpoint(final NacosClientProperties properties) {
         if (properties == null) {
             
             return "";
         }
         // Whether to enable domain name resolution rules
         String isUseEndpointRuleParsing = properties.getProperty(PropertyKeyConst.IS_USE_ENDPOINT_PARSING_RULE,
-                System.getProperty(SystemPropertyKeyConst.IS_USE_ENDPOINT_PARSING_RULE,
+                properties.getProperty(SystemPropertyKeyConst.IS_USE_ENDPOINT_PARSING_RULE,
                         String.valueOf(ParamUtil.USE_ENDPOINT_PARSING_RULE_DEFAULT_VALUE)));
         
         boolean isUseEndpointParsingRule = Boolean.parseBoolean(isUseEndpointRuleParsing);
@@ -135,7 +129,7 @@ public class InitUtils {
         }
         
         String endpointPort = TemplateUtils
-                .stringEmptyAndThenExecute(System.getenv(PropertyKeyConst.SystemEnv.ALIBABA_ALIWARE_ENDPOINT_PORT),
+                .stringEmptyAndThenExecute(properties.getProperty(PropertyKeyConst.SystemEnv.ALIBABA_ALIWARE_ENDPOINT_PORT),
                         () -> properties.getProperty(PropertyKeyConst.ENDPOINT_PORT));
         
         endpointPort = TemplateUtils.stringEmptyAndThenExecute(endpointPort, () -> DEFAULT_END_POINT_PORT);
