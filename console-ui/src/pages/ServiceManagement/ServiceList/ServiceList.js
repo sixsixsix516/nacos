@@ -30,7 +30,7 @@ import {
   ConfigProvider,
   Switch,
 } from '@alifd/next';
-import { request } from '../../../globalLib';
+import { getParams, setParams, request } from '../../../globalLib';
 import { generateUrl } from '../../../utils/nacosutil';
 import RegionGroup from '../../../components/RegionGroup';
 import EditServiceDialog from '../ServiceDetail/EditServiceDialog';
@@ -64,8 +64,8 @@ class ServiceList extends React.Component {
       currentPage: 1,
       dataSource: [],
       search: {
-        serviceName: '',
-        groupName: '',
+        serviceName: getParams('serviceNameParam') || '',
+        groupName: getParams('groupNameParam') || '',
       },
       hasIpCount: !(localStorage.getItem('hasIpCount') === 'false'),
     };
@@ -96,6 +96,10 @@ class ServiceList extends React.Component {
       `serviceNameParam=${search.serviceName}`,
       `groupNameParam=${search.groupName}`,
     ];
+    setParams({
+      serviceNameParam: search.serviceName,
+      groupNameParam: search.groupName,
+    });
     this.openLoading();
     request({
       url: `v1/ns/catalog/services?${parameter.join('&')}`,
@@ -170,10 +174,11 @@ class ServiceList extends React.Component {
     });
   }
 
-  setNowNameSpace = (nowNamespaceName, nowNamespaceId) =>
+  setNowNameSpace = (nowNamespaceName, nowNamespaceId, nowNamespaceDesc) =>
     this.setState({
       nowNamespaceName,
       nowNamespaceId,
+      nowNamespaceDesc,
     });
 
   rowColor = row => ({ className: !row.healthyInstanceCount ? 'row-bg-red' : '' });
@@ -196,14 +201,20 @@ class ServiceList extends React.Component {
       deleteAction,
       subscriber,
     } = locale;
-    const { search, nowNamespaceName, nowNamespaceId, hasIpCount } = this.state;
+    const { search, nowNamespaceName, nowNamespaceId, nowNamespaceDesc, hasIpCount } = this.state;
     const { init, getValue } = this.field;
     this.init = init;
     this.getValue = getValue;
 
     return (
       <div className="main-container service-management">
-        <PageTitle title={serviceList} desc={nowNamespaceId} nameSpace />
+        <PageTitle
+          title={serviceList}
+          desc={nowNamespaceDesc}
+          namespaceId={nowNamespaceId}
+          namespaceName={nowNamespaceName}
+          nameSpace
+        />
         <RegionGroup
           setNowNameSpace={this.setNowNameSpace}
           namespaceCallBack={this.getQueryLater}
@@ -217,6 +228,11 @@ class ServiceList extends React.Component {
         >
           <Col span="24">
             <Form inline field={this.field}>
+              <FormItem label="">
+                <Button type="primary" onClick={() => this.openEditServiceDialog()}>
+                  {create}
+                </Button>
+              </FormItem>
               <FormItem label={serviceName}>
                 <Input
                   placeholder={serviceNamePlaceholder}
@@ -257,11 +273,6 @@ class ServiceList extends React.Component {
                   style={{ marginRight: 10 }}
                 >
                   {query}
-                </Button>
-              </FormItem>
-              <FormItem label="" style={{ float: 'right' }}>
-                <Button type="primary" onClick={() => this.openEditServiceDialog()}>
-                  {create}
                 </Button>
               </FormItem>
             </Form>

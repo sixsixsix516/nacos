@@ -19,10 +19,9 @@ package com.alibaba.nacos.config.server.service.dump.processor;
 import com.alibaba.nacos.common.task.NacosTask;
 import com.alibaba.nacos.common.task.NacosTaskProcessor;
 import com.alibaba.nacos.config.server.model.ConfigInfoTagWrapper;
-import com.alibaba.nacos.config.server.model.Page;
+import com.alibaba.nacos.persistence.model.Page;
 import com.alibaba.nacos.config.server.service.ConfigCacheService;
-import com.alibaba.nacos.config.server.service.dump.DumpService;
-import com.alibaba.nacos.config.server.service.repository.PersistService;
+import com.alibaba.nacos.config.server.service.repository.ConfigInfoTagPersistService;
 import com.alibaba.nacos.config.server.utils.GroupKey2;
 import com.alibaba.nacos.config.server.utils.LogUtil;
 
@@ -36,19 +35,18 @@ import static com.alibaba.nacos.config.server.utils.LogUtil.DEFAULT_LOG;
  */
 public class DumpAllTagProcessor implements NacosTaskProcessor {
     
-    public DumpAllTagProcessor(DumpService dumpService) {
-        this.dumpService = dumpService;
-        this.persistService = dumpService.getPersistService();
+    public DumpAllTagProcessor(ConfigInfoTagPersistService configInfoTagPersistService) {
+        this.configInfoTagPersistService = configInfoTagPersistService;
     }
     
     @Override
     public boolean process(NacosTask task) {
-        int rowCount = persistService.configInfoTagCount();
+        int rowCount = configInfoTagPersistService.configInfoTagCount();
         int pageCount = (int) Math.ceil(rowCount * 1.0 / PAGE_SIZE);
         
         int actualRowCount = 0;
         for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
-            Page<ConfigInfoTagWrapper> page = persistService.findAllConfigInfoTagForDumpAll(pageNo, PAGE_SIZE);
+            Page<ConfigInfoTagWrapper> page = configInfoTagPersistService.findAllConfigInfoTagForDumpAll(pageNo, PAGE_SIZE);
             if (page != null) {
                 for (ConfigInfoTagWrapper cf : page.getPageItems()) {
                     boolean result = ConfigCacheService
@@ -68,7 +66,5 @@ public class DumpAllTagProcessor implements NacosTaskProcessor {
     
     static final int PAGE_SIZE = 1000;
     
-    final DumpService dumpService;
-    
-    final PersistService persistService;
+    final ConfigInfoTagPersistService configInfoTagPersistService;
 }

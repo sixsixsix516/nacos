@@ -16,7 +16,14 @@
 
 package com.alibaba.nacos.plugin.datasource.mapper;
 
-import java.util.Map;
+import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
+import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
+import com.alibaba.nacos.plugin.datasource.model.MapperContext;
+import com.alibaba.nacos.plugin.datasource.model.MapperResult;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The config with tags mapper.
@@ -26,43 +33,54 @@ import java.util.Map;
 
 public interface ConfigTagsRelationMapper extends Mapper {
     
-    
-    /**
-     * Get the count of relations.
-     * The default sql:
-     * SELECT count(*) FROM config_info  a LEFT JOIN config_tags_relation b ON a.id=b.id WHERE a.data_id=? AND a.tenant_id=? ...
-     *
-     * @param params The map of dataId and tenantId.
-     * @param tagSize the tags name size.
-     * @return The sql of getting the count of relations.
-     */
-    String findConfigInfoByDataIdAndAdvanceCountRows(Map<String, String> params, int tagSize);
-    
-    /**
-     * Find config info.
-     * The default sql:
-     * SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content FROM config_info  a LEFT JOIN
-     * config_tags_relation b ON a.id=b.id WHERE a.data_id=? AND a.tenant_id AND b.tag_name IN (...) ...
-     *
-     * @param params The map of appName.
-     * @param tagSize the tags name size.
-     * @param startRow The start index.
-     * @param pageSize The size of page.
-     * @return The sql of finding config info.
-     */
-    String findConfigInfoByDataIdAndAdvanceFetchRows(Map<String, String> params, int tagSize, int startRow, int pageSize);
-    
     /**
      * Get the count of config info.
      * The default sql:
      * SELECT count(*) FROM config_info WHERE ...
      *
-     * @param params The map of params, the key is the parameter name(dataId, groupId, tenantId, appName, startTime, endTime, content),
-     *                the value is the key's value.
-     * @param tagSize the tags name size.
+     * @param context The map of params, the key is the parameter name(dataId, groupId, tenantId, appName, startTime,
+     *                endTime, content), the value is the key's value.
      * @return The sql of get config info.
      */
-    String findConfigInfo4PageCountRows(final Map<String, String> params, int tagSize);
+    default MapperResult findConfigInfo4PageCountRows(final MapperContext context) {
+        final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
+        final String dataId = (String) context.getWhereParameter(FieldConstant.DATA_ID);
+        final String group = (String) context.getWhereParameter(FieldConstant.GROUP_ID);
+        final String content = (String) context.getWhereParameter(FieldConstant.CONTENT);
+        final String[] tagArr = (String[]) context.getWhereParameter(FieldConstant.TAG_ARR);
+        
+        List<Object> paramList = new ArrayList<>();
+        StringBuilder where = new StringBuilder(" WHERE ");
+        final String sqlCount = "SELECT count(*) FROM config_info  a LEFT JOIN config_tags_relation b ON a.id=b.id";
+        
+        where.append(" a.tenant_id=? ");
+        
+        if (StringUtils.isNotBlank(dataId)) {
+            where.append(" AND a.data_id=? ");
+            paramList.add(dataId);
+        }
+        if (StringUtils.isNotBlank(group)) {
+            where.append(" AND a.group_id=? ");
+            paramList.add(group);
+        }
+        if (StringUtils.isNotBlank(appName)) {
+            where.append(" AND a.app_name=? ");
+            paramList.add(appName);
+        }
+        if (!StringUtils.isBlank(content)) {
+            where.append(" AND a.content LIKE ? ");
+            paramList.add(content);
+        }
+        where.append(" AND b.tag_name IN (");
+        for (int i = 0; i < tagArr.length; i++) {
+            if (i != 0) {
+                where.append(", ");
+            }
+            where.append('?');
+        }
+        where.append(") ");
+        return new MapperResult(sqlCount + where, paramList);
+    }
     
     /**
      * Find config info.
@@ -70,49 +88,61 @@ public interface ConfigTagsRelationMapper extends Mapper {
      * SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content FROM config_info  a LEFT JOIN
      * config_tags_relation b ON a.id=b.i ...
      *
-     * @param params The keys and values are dataId and group.
-     * @param tagSize the tags name size.
-     * @param startRow The start index.
-     * @param pageSize The size of page.
+     * @param context The keys and values are dataId and group.
      * @return The sql of finding config info.
      */
-    String findConfigInfo4PageFetchRows(final Map<String, String> params, int tagSize, int startRow, int pageSize);
-    
-    /**
-     * Get the count of config information by group id and tenant id and tag name.
-     * The default sql:
-     * SELECT count(*) FROM config_info WHERE group_id=? AND tenant_id=? AND b.tag_name IN (...)
-     *
-     * @param params The keys and values are dataId and group.
-     * @param tagSize the tags name size.
-     * @return The sql of querying configuration information.
-     */
-    String findConfigInfoByGroupAndAdvanceCountRows(final Map<String, String> params, int tagSize);
-    
-    /**
-     * Query configuration information.
-     * The default sql:
-     * SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content FROM config_info  a LEFT JOIN "
-     * config_tags_relation b ON a.id=b.id WHERE a.tenant_id=? AND b.tag_name IN (...) ...
-     *
-     * @param params the keys and values are dataId and group.
-     * @param tagSize the tags name size.
-     * @param startRow The start index.
-     * @param pageSize The size of page.
-     * @return The sql of querying configuration information.
-     */
-    String findConfigInfoByGroupAndAdvanceFetchRows(final Map<String, String> params, int tagSize, int startRow, int pageSize);
+    MapperResult findConfigInfo4PageFetchRows(final MapperContext context);
     
     /**
      * Get the count of config information by config tags relation.
      * The default sql:
      * SELECT count(*) FROM config_info  a LEFT JOIN config_tags_relation b ON a.id=b.id
      *
-     * @param params the keys and values are dataId and group.
-     * @param tagSize the tags name size.
+     * @param context the keys and values are dataId and group.
      * @return The sql of getting the count of config information.
      */
-    String findConfigInfoLike4PageCountRows(final Map<String, String> params, int tagSize);
+    default MapperResult findConfigInfoLike4PageCountRows(final MapperContext context) {
+        final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
+        final String tenantId = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
+        final String dataId = (String) context.getWhereParameter(FieldConstant.DATA_ID);
+        final String group = (String) context.getWhereParameter(FieldConstant.GROUP_ID);
+        final String content = (String) context.getWhereParameter(FieldConstant.CONTENT);
+        final String[] tagArr = (String[]) context.getWhereParameter(FieldConstant.TAG_ARR);
+        
+        List<Object> paramList = new ArrayList<>();
+        StringBuilder where = new StringBuilder(" WHERE ");
+        final String sqlCount = "SELECT count(*) FROM config_info  a LEFT JOIN config_tags_relation b ON a.id=b.id ";
+        
+        where.append(" a.tenant_id LIKE ? ");
+        paramList.add(tenantId);
+        if (!StringUtils.isBlank(dataId)) {
+            where.append(" AND a.data_id LIKE ? ");
+            paramList.add(dataId);
+        }
+        if (StringUtils.isNotBlank(group)) {
+            where.append(" AND a.group_id LIKE ? ");
+            paramList.add(group);
+        }
+        if (StringUtils.isNotBlank(appName)) {
+            where.append(" AND a.app_name = ? ");
+            paramList.add(appName);
+        }
+        if (StringUtils.isNotBlank(content)) {
+            where.append(" AND a.content LIKE ? ");
+            paramList.add(content);
+        }
+        
+        where.append(" AND b.tag_name IN (");
+        for (int i = 0; i < tagArr.length; i++) {
+            if (i != 0) {
+                where.append(", ");
+            }
+            where.append('?');
+            paramList.add(tagArr[i]);
+        }
+        where.append(") ");
+        return new MapperResult(sqlCount + where, paramList);
+    }
     
     /**
      * Query config info.
@@ -120,47 +150,17 @@ public interface ConfigTagsRelationMapper extends Mapper {
      * SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content
      * FROM config_info a LEFT JOIN config_tags_relation b ON a.id=b.id
      *
-     * @param params the keys and values are dataId and group.
-     * @param tagSize the tags name size.
-     * @param startRow The start index.
-     * @param pageSize The size of page.
+     * @param context the keys and values are dataId and group.
      * @return The sql of querying config info.
      */
-    String findConfigInfoLike4PageFetchRows(final Map<String, String> params, int tagSize, int startRow, int pageSize);
+    MapperResult findConfigInfoLike4PageFetchRows(final MapperContext context);
     
     /**
-     * The number of config.
-     * The default sql:
-     * SELECT count(*) FROM config_info a LEFT JOIN config_tags_relation b ON a.id=b.id WHERE a.tenant_id=?
+     * 获取返回表名.
      *
-     * @param params The map of appName.
-     * @param tagSize The size of tags.
-     * @return The number of config.
+     * @return 表名
      */
-    String findConfigInfoByAdvanceCountRows(Map<String, String> params, int tagSize);
-    
-    /**
-     * Query configuration information.
-     * The default sql:
-     * SELECT count(*) FROM config_info a LEFT JOIN config_tags_relation b ON a.id=b.id WHERE a.tenant_id=?
-     *
-     * @param params The map of appName.
-     * @param tagSize The size of tags.
-     * @param startRow The start index.
-     * @param pageSize The size of page.
-     * @return The sql of querying configuration information.
-     */
-    String findConfigInfoByAdvanceFetchRows(Map<String, String> params, int tagSize, int startRow, int pageSize);
-    
-    /**
-     * The default sql:
-     * SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content FROM config_info  a LEFT JOIN
-     * config_tags_relation b ON a.id=b.id WHERE a.data_id=? AND a.group_id=? AND a.tenant_id=?
-     * AND b.tag_name IN (...) ...;
-     *
-     * @param params The map of appName.
-     * @param tagSize the tags name size.
-     * @return * Query configuration information based on dataId and group.
-     */
-    String findConfigInfoAdvanceInfo(Map<String, String> params, int tagSize);
+    default String getTableName() {
+        return TableConstant.CONFIG_TAGS_RELATION;
+    }
 }

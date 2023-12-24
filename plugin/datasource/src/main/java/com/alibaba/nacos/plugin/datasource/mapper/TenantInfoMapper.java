@@ -16,8 +16,10 @@
 
 package com.alibaba.nacos.plugin.datasource.mapper;
 
+import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
+
 /**
- * The tenant info mapper.
+ * The tenant info mapper. If there is a new non-universal sql, you can add it here.
  *
  * @author hyx
  **/
@@ -25,11 +27,12 @@ package com.alibaba.nacos.plugin.datasource.mapper;
 public interface TenantInfoMapper extends Mapper {
     
     /**
-     * Get the count of tenant information by id.
-     * The defaut sql:
-     * SELECT count(*) FROM tenant_info WHERE tenant_id = ?
+     * 获取返回表名.
      *
-     * @return The sql of get the count of tenant information.
+     * @return 表名
      */
-    String getCountByTenantId();
+    default String getTableName() {
+        return TableConstant.TENANT_INFO;
+    }
+
 }

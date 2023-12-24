@@ -18,11 +18,12 @@ package com.alibaba.nacos.core.listener;
 
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.exception.runtime.NacosRuntimeException;
+import com.alibaba.nacos.common.event.ServerConfigChangeEvent;
 import com.alibaba.nacos.common.executor.ExecutorFactory;
 import com.alibaba.nacos.common.executor.NameThreadFactory;
 import com.alibaba.nacos.common.executor.ThreadPoolManager;
 import com.alibaba.nacos.common.notify.NotifyCenter;
-import com.alibaba.nacos.common.event.ServerConfigChangeEvent;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import com.alibaba.nacos.sys.file.FileChangeEvent;
 import com.alibaba.nacos.sys.file.FileWatcher;
@@ -30,7 +31,6 @@ import com.alibaba.nacos.sys.file.WatchFileCenter;
 import com.alibaba.nacos.sys.utils.ApplicationUtils;
 import com.alibaba.nacos.sys.utils.DiskUtils;
 import com.alibaba.nacos.sys.utils.InetUtils;
-import com.alibaba.nacos.common.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
@@ -72,7 +72,14 @@ public class StartingApplicationListener implements NacosApplicationListener {
     
     private static final String DEFAULT_DATABASE = "mysql";
     
-    private static final String DATASOURCE_PLATFORM_PROPERTY = "spring.datasource.platform";
+    /**
+     * May be removed with the upgrade of springboot version.
+     */
+    public static final String DATASOURCE_PLATFORM_PROPERTY_OLD = "spring.datasource.platform";
+    
+    private static final String DATASOURCE_PLATFORM_PROPERTY = "spring.sql.init.platform";
+    
+    private static final String DERBY_DATABASE = "derby";
     
     private static final String DEFAULT_DATASOURCE_PLATFORM = "";
     
@@ -108,12 +115,12 @@ public class StartingApplicationListener implements NacosApplicationListener {
         
         logStarting();
     }
-
+    
     @Override
     public void contextLoaded(ConfigurableApplicationContext context) {
         EnvUtil.customEnvironment();
     }
-
+    
     @Override
     public void started(ConfigurableApplicationContext context) {
         starting = false;
@@ -229,8 +236,8 @@ public class StartingApplicationListener implements NacosApplicationListener {
     private void logStarting() {
         if (!EnvUtil.getStandaloneMode()) {
             
-            scheduledExecutorService = ExecutorFactory.newSingleScheduledExecutorService(
-                    new NameThreadFactory("com.alibaba.nacos.core.nacos-starting"));
+            scheduledExecutorService = ExecutorFactory
+                    .newSingleScheduledExecutorService(new NameThreadFactory("com.alibaba.nacos.core.nacos-starting"));
             
             scheduledExecutorService.scheduleWithFixedDelay(() -> {
                 if (starting) {
@@ -243,8 +250,9 @@ public class StartingApplicationListener implements NacosApplicationListener {
     private void judgeStorageMode(ConfigurableEnvironment env) {
         
         // External data sources are used by default in cluster mode
-        boolean useExternalStorage = (DEFAULT_DATABASE.equalsIgnoreCase(
-                env.getProperty(DATASOURCE_PLATFORM_PROPERTY, DEFAULT_DATASOURCE_PLATFORM)));
+        String platform = this.getDatasourcePlatform(env);
+        boolean useExternalStorage =
+                !DEFAULT_DATASOURCE_PLATFORM.equalsIgnoreCase(platform) && !DERBY_DATABASE.equalsIgnoreCase(platform);
         
         // must initialize after setUseExternalDB
         // This value is true in stand-alone mode and false in cluster mode
@@ -263,5 +271,19 @@ public class StartingApplicationListener implements NacosApplicationListener {
         LOGGER.info("Nacos started successfully in {} mode. use {} storage",
                 System.getProperty(MODE_PROPERTY_KEY_STAND_MODE),
                 useExternalStorage ? DATASOURCE_MODE_EXTERNAL : DATASOURCE_MODE_EMBEDDED);
+    }
+    
+    /**
+     * get datasource platform.
+     *
+     * @param env ConfigurableEnvironment.
+     * @return
+     */
+    private String getDatasourcePlatform(ConfigurableEnvironment env) {
+        String platform = env.getProperty(DATASOURCE_PLATFORM_PROPERTY, DEFAULT_DATASOURCE_PLATFORM);
+        if (StringUtils.isBlank(platform)) {
+            platform = env.getProperty(DATASOURCE_PLATFORM_PROPERTY_OLD, DEFAULT_DATASOURCE_PLATFORM);
+        }
+        return platform;
     }
 }

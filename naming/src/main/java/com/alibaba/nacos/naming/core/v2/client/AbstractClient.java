@@ -37,26 +37,16 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.alibaba.nacos.naming.constants.ClientConstants.REVISION;
 
 /**
- * 抽象实现
  * Abstract implementation of {@code Client}.
  *
  * @author xiweng.yy
  */
 public abstract class AbstractClient implements Client {
-
-    /**
-     * 某个服务的生产者
-     */
+    
     protected final ConcurrentHashMap<Service, InstancePublishInfo> publishers = new ConcurrentHashMap<>(16, 0.75f, 1);
-
-    /**
-     * 某个服务的订阅者
-     */
+    
     protected final ConcurrentHashMap<Service, Subscriber> subscribers = new ConcurrentHashMap<>(16, 0.75f, 1);
-
-    /**
-     * 最后一次更新时间
-     */
+    
     protected volatile long lastUpdatedTime;
     
     protected final AtomicLong revision;
@@ -80,18 +70,14 @@ public abstract class AbstractClient implements Client {
     
     @Override
     public boolean addServiceInstance(Service service, InstancePublishInfo instancePublishInfo) {
-        if (null == publishers.put(service, instancePublishInfo)) {
-            // 第一次发布
-            if (instancePublishInfo instanceof BatchInstancePublishInfo) {
-                // 如果是批量发布实例
-                // 维护监控数据
-                MetricsMonitor.incrementIpCountWithBatchRegister(instancePublishInfo);
-            } else {
-                // 维护监控数据
+        if (instancePublishInfo instanceof BatchInstancePublishInfo) {
+            InstancePublishInfo old = publishers.put(service, instancePublishInfo);
+            MetricsMonitor.incrementIpCountWithBatchRegister(old, (BatchInstancePublishInfo) instancePublishInfo);
+        } else {
+            if (null == publishers.put(service, instancePublishInfo)) {
                 MetricsMonitor.incrementInstanceCount();
             }
         }
-        // 发布一个实例改变事件
         NotifyCenter.publishEvent(new ClientEvent.ClientChangedEvent(this));
         Loggers.SRV_LOG.info("Client change for service {}, {}", service, getClientId());
         return true;
@@ -101,14 +87,11 @@ public abstract class AbstractClient implements Client {
     public InstancePublishInfo removeServiceInstance(Service service) {
         InstancePublishInfo result = publishers.remove(service);
         if (null != result) {
-            // 第二次移除
             if (result instanceof BatchInstancePublishInfo) {
-                // 维护监控数据
                 MetricsMonitor.decrementIpCountWithBatchRegister(result);
             } else {
                 MetricsMonitor.decrementInstanceCount();
             }
-            // 发布客户端改变事件
             NotifyCenter.publishEvent(new ClientEvent.ClientChangedEvent(this));
         }
         Loggers.SRV_LOG.info("Client remove for service {}, {}", service, getClientId());

@@ -28,6 +28,7 @@ import com.alibaba.nacos.naming.core.v2.client.factory.ClientFactoryHolder;
 import com.alibaba.nacos.naming.core.v2.client.impl.IpPortBasedClient;
 import com.alibaba.nacos.naming.core.v2.client.manager.ClientManager;
 import com.alibaba.nacos.naming.core.v2.event.client.ClientEvent;
+import com.alibaba.nacos.naming.core.v2.event.client.ClientOperationEvent;
 import com.alibaba.nacos.naming.healthcheck.heartbeat.ClientBeatUpdateTask;
 import com.alibaba.nacos.naming.misc.ClientConfig;
 import com.alibaba.nacos.naming.misc.GlobalExecutor;
@@ -43,7 +44,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 临时实例客户端
  * The manager of {@code IpPortBasedClient} and ephemeral.
  *
  * @author xiweng.yy
@@ -51,10 +51,7 @@ import java.util.concurrent.TimeUnit;
 @DependsOn("clientServiceIndexesManager")
 @Component("ephemeralIpPortClientManager")
 public class EphemeralIpPortClientManager implements ClientManager {
-
-    /**
-     * 存储所有客户端   客户端id -> 客户端实例
-     */
+    
     private final ConcurrentMap<String, IpPortBasedClient> clients = new ConcurrentHashMap<>();
     
     private final DistroMapper distroMapper;
@@ -94,13 +91,12 @@ public class EphemeralIpPortClientManager implements ClientManager {
         Loggers.SRV_LOG.info("Client connection {} disconnect, remove instances and subscribers", clientId);
         IpPortBasedClient client = clients.remove(clientId);
         if (null == client) {
-            // 内存中没有，直接返回
             return true;
         }
-        // 发布断开连接事件
-        NotifyCenter.publishEvent(new ClientEvent.ClientDisconnectEvent(client, isResponsibleClient(client)));
-        // 更改状态为取消
+        boolean isResponsible = isResponsibleClient(client);
+        NotifyCenter.publishEvent(new ClientEvent.ClientDisconnectEvent(client, isResponsible));
         client.release();
+        NotifyCenter.publishEvent(new ClientOperationEvent.ClientReleaseEvent(client, isResponsible));
         return true;
     }
     
@@ -144,10 +140,7 @@ public class EphemeralIpPortClientManager implements ClientManager {
         }
         return false;
     }
-
-    /**
-     * 过期客户端清理器
-     */
+    
     private static class ExpiredClientCleaner implements Runnable {
         
         private final EphemeralIpPortClientManager clientManager;
@@ -165,7 +158,6 @@ public class EphemeralIpPortClientManager implements ClientManager {
             for (String each : clientManager.allClientId()) {
                 IpPortBasedClient client = (IpPortBasedClient) clientManager.getClient(each);
                 if (null != client && isExpireClient(currentTime, client)) {
-                    // 实例过期了
                     clientManager.clientDisconnected(each);
                 }
             }

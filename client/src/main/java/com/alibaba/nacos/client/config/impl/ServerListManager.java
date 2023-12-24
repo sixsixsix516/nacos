@@ -23,7 +23,6 @@ import com.alibaba.nacos.client.env.NacosClientProperties;
 import com.alibaba.nacos.client.utils.ContextPathUtil;
 import com.alibaba.nacos.client.utils.EnvUtil;
 import com.alibaba.nacos.client.utils.LogUtils;
-import com.alibaba.nacos.client.utils.ParamUtil;
 import com.alibaba.nacos.client.utils.TemplateUtils;
 import com.alibaba.nacos.common.http.HttpRestResult;
 import com.alibaba.nacos.common.http.client.NacosRestTemplate;
@@ -48,6 +47,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import com.alibaba.nacos.client.utils.ParamUtil;
 
 import static com.alibaba.nacos.common.constant.RequestUrlConstants.HTTPS_PREFIX;
 import static com.alibaba.nacos.common.constant.RequestUrlConstants.HTTP_PREFIX;
@@ -71,7 +71,6 @@ public class ServerListManager implements Closeable {
     });
     
     /**
-     * 环境名称： 例如 default
      * The name of the different environment.
      */
     private final String name;
@@ -85,10 +84,7 @@ public class ServerListManager implements Closeable {
     public static final String CUSTOM_NAME = "custom";
     
     public static final String FIXED_NAME = "fixed";
-
-    /**
-     * 最大重试次数
-     */
+    
     private final int initServerlistRetryTimes = 5;
     
     /**
@@ -326,12 +322,11 @@ public class ServerListManager implements Closeable {
         
         GetServerListTask getServersTask = new GetServerListTask(addressServerUrl);
         for (int i = 0; i < initServerlistRetryTimes && serverUrls.isEmpty(); ++i) {
-            // 当小于 最大重试次数  并且  服务列表还是空的时候     就循环进来
-
-            // 注意 这是直接run, 同步运行
             getServersTask.run();
+            if (!serverUrls.isEmpty()) {
+                break;
+            }
             try {
-                // 等待 对象的等待！  等待100毫秒 + i毫秒    （约0.1秒）
                 this.wait((i + 1) * 100L);
             } catch (Exception e) {
                 LOGGER.warn("get serverlist fail,url: {}", addressServerUrl);
@@ -339,18 +334,14 @@ public class ServerListManager implements Closeable {
         }
         
         if (serverUrls.isEmpty()) {
-            // 如果没有数据，就是出现问题了！ 直接抛异常 告知用户 检查问题
             LOGGER.error("[init-serverlist] fail to get NACOS-server serverlist! env: {}, url: {}", name,
                     addressServerUrl);
             throw new NacosException(NacosException.SERVER_ERROR,
                     "fail to get NACOS-server serverlist! env:" + name + ", not connnect url:" + addressServerUrl);
         }
-
-        // 最后。 将当前任务定时执行， 每30秒执行一次同步任务
+        
         // executor schedules the timer task
         this.executorService.scheduleWithFixedDelay(getServersTask, 0L, 30L, TimeUnit.SECONDS);
-
-        // 已启动了！
         isStarted = true;
     }
     
@@ -372,10 +363,7 @@ public class ServerListManager implements Closeable {
         ThreadUtils.shutdownThreadPool(executorService, LOGGER);
         LOGGER.info("{} do shutdown stop", className);
     }
-
-    /**
-     * 获取服务列表的任务
-     */
+    
     class GetServerListTask implements Runnable {
         
         final String url;
@@ -383,54 +371,48 @@ public class ServerListManager implements Closeable {
         GetServerListTask(String url) {
             this.url = url;
         }
-
+        
         @Override
         public void run() {
+            /*
+             get serverlist from nameserver
+             */
             try {
-                // get serverlist from nameserver
-                // 获取服务列表 从nameserver
                 updateIfChanged(getApacheServerList(url, name));
             } catch (Exception e) {
                 LOGGER.error("[" + name + "][update-serverlist] failed to update serverlist from address server!", e);
             }
         }
     }
-
-    /**
-     * 如果服务列表发生了改变 就更新
-     */
+    
     private void updateIfChanged(List<String> newList) {
         if (null == newList || newList.isEmpty()) {
             LOGGER.warn("[update-serverlist] current serverlist from address server is empty!!!");
             return;
         }
-
-        // 存放带上http https的服务列表
+        
         List<String> newServerAddrList = new ArrayList<>();
         for (String server : newList) {
             if (server.startsWith(HTTP_PREFIX) || server.startsWith(HTTPS_PREFIX)) {
                 newServerAddrList.add(server);
             } else {
-                // 如果没有以http https开始，就补上 http前缀
                 newServerAddrList.add(HTTP_PREFIX + server);
             }
         }
-
-        // 如果没有改变就直接返回
+        
+        /*
+         no change
+         */
         if (newServerAddrList.equals(serverUrls)) {
             return;
         }
-
-        // ！！！ 发生改变了
-
         serverUrls = new ArrayList<>(newServerAddrList);
         iterator = iterator();
         currentServerAddr = iterator.next();
         
         // Using unified event processor, NotifyCenter
-        // 使用统一事件处理器， 发布一个服务列表改变事件！
-        NotifyCenter.publishEvent(new ServerlistChangeEvent());
-        LOGGER.info("[{}] [update-serverlist] serverlist updated to {}", name, serverUrls);
+        NotifyCenter.publishEvent(new ServerListChangeEvent());
+        LOGGER.info("[{}] [update-serverList] serverList updated to {}", name, serverUrls);
     }
     
     private List<String> getApacheServerList(String url, String name) {
@@ -439,19 +421,15 @@ public class ServerListManager implements Closeable {
             
             if (httpResult.ok()) {
                 if (DEFAULT_NAME.equals(name)) {
-                    // 如果当前是默认环境
                     EnvUtil.setSelfEnv(httpResult.getHeader().getOriginalResponseHeader());
                 }
-                // 获取服务列表
                 List<String> lines = IoUtils.readLines(new StringReader(httpResult.getData()));
                 List<String> result = new ArrayList<>(lines.size());
                 for (String serverAddr : lines) {
                     if (StringUtils.isNotBlank(serverAddr)) {
-                        // 解析ip port
                         String[] ipPort = InternetAddressUtil.splitIPPortStr(serverAddr.trim());
                         String ip = ipPort[0].trim();
                         if (ipPort.length == 1) {
-                            // 如果只配置了ip， 那么端口就给一个默认值
                             result.add(ip + InternetAddressUtil.IP_PORT_SPLITER + ParamUtil.getDefaultServerPort());
                         } else {
                             result.add(serverAddr);

@@ -28,7 +28,6 @@ import java.util.Properties;
 import java.util.ServiceLoader;
 
 /**
- * 配置中心的 过滤器链 管理者
  * Config Filter Chain Management.
  *
  * @author Nacos
@@ -36,13 +35,13 @@ import java.util.ServiceLoader;
 public class ConfigFilterChainManager implements IConfigFilterChain {
     
     private final List<IConfigFilter> filters = new ArrayList<>();
+
+    private final Properties initProperty;
     
     public ConfigFilterChainManager(Properties properties) {
-        // 这里是SPI ！！！
+        this.initProperty = properties;
         ServiceLoader<IConfigFilter> configFilters = ServiceLoader.load(IConfigFilter.class);
         for (IConfigFilter configFilter : configFilters) {
-            // 初始化回调
-            configFilter.init(properties);
             addFilter(configFilter);
         }
     }
@@ -54,6 +53,8 @@ public class ConfigFilterChainManager implements IConfigFilterChain {
      * @return this
      */
     public synchronized ConfigFilterChainManager addFilter(IConfigFilter filter) {
+        // init
+        filter.init(this.initProperty);
         // ordered by order value
         int i = 0;
         while (i < this.filters.size()) {
@@ -79,7 +80,7 @@ public class ConfigFilterChainManager implements IConfigFilterChain {
     public void doFilter(IConfigRequest request, IConfigResponse response) throws NacosException {
         new VirtualFilterChain(this.filters).doFilter(request, response);
     }
-    
+
     private static class VirtualFilterChain implements IConfigFilterChain {
         
         private final List<? extends IConfigFilter> additionalFilters;
@@ -99,5 +100,5 @@ public class ConfigFilterChainManager implements IConfigFilterChain {
             }
         }
     }
-    
+
 }

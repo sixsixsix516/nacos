@@ -66,6 +66,7 @@ public class MemberUtil {
         oldMember.setExtendInfo(newMember.getExtendInfo());
         oldMember.setAddress(newMember.getAddress());
         oldMember.setAbilities(newMember.getAbilities());
+        oldMember.setGrpcReportEnabled(newMember.isGrpcReportEnabled());
     }
     
     /**
@@ -95,6 +96,8 @@ public class MemberUtil {
         extendInfo.put(MemberMetaDataConstants.RAFT_PORT, String.valueOf(calculateRaftPort(target)));
         extendInfo.put(MemberMetaDataConstants.READY_TO_UPGRADE, true);
         target.setExtendInfo(extendInfo);
+        // use grpc to report default
+        target.setGrpcReportEnabled(true);
         return target;
     }
     
@@ -108,7 +111,10 @@ public class MemberUtil {
         if (member.getAbilities() == null || member.getAbilities().getRemoteAbility() == null) {
             return false;
         }
-        return member.getAbilities().getRemoteAbility().isSupportRemoteConnection();
+        
+        boolean oldVerJudge = member.getAbilities().getRemoteAbility().isSupportRemoteConnection();
+        
+        return member.isGrpcReportEnabled() || oldVerJudge;
     }
 
     /**
@@ -266,7 +272,7 @@ public class MemberUtil {
      *
      * @param actual   actual member
      * @param expected expected member
-     * @return true if all content is same, otherwise false
+     * @return true if one content is different, otherwise false
      */
     public static boolean isBasicInfoChanged(Member actual, Member expected) {
         if (null == expected) {
@@ -284,8 +290,9 @@ public class MemberUtil {
         if (!expected.getState().equals(actual.getState())) {
             return true;
         }
-        
-        if (!expected.getAbilities().equals(actual.getAbilities())) {
+    
+        // if change
+        if (expected.isGrpcReportEnabled() != actual.isGrpcReportEnabled()) {
             return true;
         }
         

@@ -17,7 +17,6 @@
 package com.alibaba.nacos.plugin.datasource.impl.mysql;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
 import com.alibaba.nacos.plugin.datasource.mapper.TenantInfoMapper;
 
@@ -28,19 +27,9 @@ import com.alibaba.nacos.plugin.datasource.mapper.TenantInfoMapper;
  **/
 
 public class TenantInfoMapperByMySql extends AbstractMapper implements TenantInfoMapper {
-    
-    @Override
-    public String getTableName() {
-        return TableConstant.TENANT_INFO;
-    }
-    
+
     @Override
     public String getDataSource() {
         return DataSourceConstant.MYSQL;
-    }
-    
-    @Override
-    public String getCountByTenantId() {
-        return "SELECT count(*) FROM tenant_info WHERE tenant_id = ?";
     }
 }

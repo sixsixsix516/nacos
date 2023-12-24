@@ -18,7 +18,9 @@ package com.alibaba.nacos.plugin.datasource;
 
 import com.alibaba.nacos.api.exception.runtime.NacosRuntimeException;
 import com.alibaba.nacos.common.spi.NacosServiceLoader;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.plugin.datasource.mapper.Mapper;
+import com.alibaba.nacos.plugin.datasource.proxy.MapperProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +46,8 @@ public class MapperManager {
     
     private static final MapperManager INSTANCE = new MapperManager();
     
+    private boolean dataSourceLogEnable;
+    
     private MapperManager() {
         loadInitial();
     }
@@ -52,19 +56,18 @@ public class MapperManager {
      * Get the instance of MapperManager.
      * @return The instance of MapperManager.
      */
-    public static MapperManager instance() {
+    public static MapperManager instance(boolean isDataSourceLogEnable) {
+        INSTANCE.dataSourceLogEnable = isDataSourceLogEnable;
         return INSTANCE;
     }
     
     /**
      * The init method.
      */
-    public void loadInitial() {
+    public synchronized void loadInitial() {
         Collection<Mapper> mappers = NacosServiceLoader.load(Mapper.class);
         for (Mapper mapper : mappers) {
-            Map<String, Mapper> mapperMap = MAPPER_SPI_MAP.getOrDefault(mapper.getDataSource(), new HashMap<>(16));
-            mapperMap.put(mapper.getTableName(), mapper);
-            MAPPER_SPI_MAP.put(mapper.getDataSource(), mapperMap);
+            putMapper(mapper);
             LOGGER.info("[MapperManager] Load Mapper({}) datasource({}) tableName({}) successfully.",
                     mapper.getClass(), mapper.getDataSource(), mapper.getTableName());
         }
@@ -78,10 +81,14 @@ public class MapperManager {
         if (Objects.isNull(mapper)) {
             return;
         }
-        Map<String, Mapper> mapperMap = MAPPER_SPI_MAP.getOrDefault(mapper.getDataSource(), new HashMap<>(16));
-        mapperMap.put(mapper.getTableName(), mapper);
-        MAPPER_SPI_MAP.put(mapper.getDataSource(), mapperMap);
-        LOGGER.warn("[MapperManager] join successfully.");
+        putMapper(mapper);
+        LOGGER.info("[MapperManager] join successfully.");
+    }
+    
+    private static void putMapper(Mapper mapper) {
+        Map<String, Mapper> mapperMap = MAPPER_SPI_MAP.computeIfAbsent(mapper.getDataSource(), key ->
+                new HashMap<>(16));
+        mapperMap.putIfAbsent(mapper.getTableName(), mapper);
     }
     
     /**
@@ -93,6 +100,9 @@ public class MapperManager {
      */
     public <R extends Mapper> R findMapper(String dataSource, String tableName) {
         LOGGER.info("[MapperManager] findMapper dataSource: {}, tableName: {}", dataSource, tableName);
+        if (StringUtils.isBlank(dataSource) || StringUtils.isBlank(tableName)) {
+            throw new NacosRuntimeException(FIND_DATASOURCE_ERROR_CODE, "dataSource or tableName is null");
+        }
         Map<String, Mapper> tableMapper = MAPPER_SPI_MAP.get(dataSource);
         if (Objects.isNull(tableMapper)) {
             throw new NacosRuntimeException(FIND_DATASOURCE_ERROR_CODE,
@@ -102,6 +112,9 @@ public class MapperManager {
         if (Objects.isNull(mapper)) {
             throw new NacosRuntimeException(FIND_TABLE_ERROR_CODE,
                     "[MapperManager] Failed to find the table ,tableName:" + tableName);
+        }
+        if (dataSourceLogEnable) {
+            return MapperProxy.createSingleProxy(mapper);
         }
         return (R) mapper;
     }
